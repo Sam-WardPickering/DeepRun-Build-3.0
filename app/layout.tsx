@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import DotObserver from "@/components/DotObserver";
 
 // The three brand fonts. next/font downloads them at build time and
 // self-hosts them, so there is no runtime request to Google.
@@ -22,9 +23,19 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Deep Run - Websites that win work",
+  metadataBase: new URL("https://deeprun.co.nz"),
+  title: "Deep Run - Websites That Win Work",
   description:
     "Fast, sharp, fixed-price websites for New Zealand trades, hospitality and local businesses - live in days, with optional care plans that keep them that way.",
+  openGraph: {
+    title: "Deep Run - Websites That Win Work",
+    description:
+      "Fast, sharp, fixed-price websites for New Zealand trades, hospitality and local businesses.",
+    url: "https://deeprun.co.nz",
+    siteName: "Deep Run",
+    locale: "en_NZ",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -38,6 +49,12 @@ export default function RootLayout({
         <a href="#main" className="skip-link">
           Skip to content
         </a>
+        {/* If JavaScript is unavailable, reveal everything immediately -
+            the power-up choreography must never hide content. */}
+        <noscript>
+          <style>{`[data-pw]{opacity:1 !important;translate:none !important}.mono .dot{background:var(--gold)}`}</style>
+        </noscript>
+        <DotObserver />
         {children}
       </body>
     </html>

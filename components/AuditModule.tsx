@@ -153,9 +153,10 @@ export default function AuditModule() {
         <div
           ref={cardRef}
           className={`audit-card${scanning ? " scanning" : ""}`}
+          data-pw="flicker"
         >
           <AuditShader />
-          <div className="audit-left">
+          <div className="audit-left" data-pw="rise" style={{ "--pw-delay": "0.15s" } as React.CSSProperties}>
             <div className="mono">
               <span className="dot">●</span>AI site check
             </div>
@@ -195,7 +196,7 @@ export default function AuditModule() {
             )}
           </div>
 
-          <div className="audit-right">
+          <div className="audit-right" data-pw="rise" style={{ "--pw-delay": "0.32s" } as React.CSSProperties}>
             <div className="score-top">
               <span className="score-num">{revealed ? displayTotal : "–"}</span>
               <span className="score-den">/100</span>

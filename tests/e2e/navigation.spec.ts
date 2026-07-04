@@ -67,12 +67,13 @@ test("privacy page is reachable from the footer", async ({ page }) => {
 
 test("about page loads with expected content", async ({ page }) => {
   await page.goto("/about");
-  await expect(page.locator("h1")).toContainText("Built by an engineer");
+  await expect(page.locator("h1")).toContainText("held to a higher standard");
   const body = page.locator(".article-body");
-  await expect(body).toContainText("four years");
-  await expect(body).toContainText("quality assurance");
+  await expect(body).toContainText("Quality assurance");
   await expect(body).toContainText("care plan");
   await expect(body).toContainText("optional");
+  // Studio voice: no year-counting on the about page
+  await expect(body).not.toContainText("four years");
 });
 
 test("about page links to site check and contact", async ({ page }) => {
@@ -93,7 +94,7 @@ test("about page is reachable from nav", async ({ page, browserName }, testInfo)
   await page.goto("/");
   await page.locator(".nav-links").getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/\/about/);
-  await expect(page.locator("h1")).toContainText("Built by an engineer");
+  await expect(page.locator("h1")).toContainText("held to a higher standard");
 });
 
 test("404 page returns for invalid routes", async ({ page }) => {

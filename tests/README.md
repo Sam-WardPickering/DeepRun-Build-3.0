@@ -24,7 +24,13 @@ Playwright starts the dev server itself. If `npm run dev` is already running, it
 
 ### homepage.spec.ts
 - Headline renders with correct word spacing (regression guard)
-- Hero copy frames care plan as optional (not bundled)
+- Hero copy sets honest expectations about ongoing care
+- Favicon is served and resolves
+- Section dots fill gold when scrolled into view
+- Audit card, resource cards and contact card power up (flicker + rise) on scroll
+- Tab title and nav casing
+- Regression guards: tilt cards are direct children of the perspective container; resource card hover lift survives the reveal system
+- Pricing and resources sections share the same left edge (alignment regression guard)
 - Primary CTA scrolls to site check, nav CTA scrolls to contact
 - Nav has aria-label for accessibility
 - Manifesto words light up on scroll, copy frames care plan as optional

@@ -59,8 +59,8 @@ export default function Contact() {
   return (
     <section className="contact-section" id="contact">
       <div className="wrap">
-        <div className="contact-card">
-          <div className="contact-left">
+        <div className="contact-card" data-pw="flicker">
+          <div className="contact-left" data-pw="rise" style={{ "--pw-delay": "0.15s" } as React.CSSProperties}>
             <div className="mono">
               <span className="dot">●</span>Get in touch
             </div>
@@ -76,7 +76,7 @@ export default function Contact() {
               </a>
             </div>
           </div>
-          <div className="contact-right">
+          <div className="contact-right" data-pw="rise" style={{ "--pw-delay": "0.32s" } as React.CSSProperties}>
             <div className="form-group">
               <label htmlFor="c-name">Your name</label>
               <input

@@ -8,7 +8,7 @@
   - One accent: kowhai gold, used sparingly
 */
 :root {
-  --bg: #100f0d;
+  --bg: #0d0c0a;
   --surface: #171613;
   --surface-2: #1d1c18;
   --ink: #ece7da;
@@ -84,12 +84,26 @@ a {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
+  /* inline-flex vertically centres the ring dot against the label text */
+  display: inline-flex;
+  align-items: center;
 }
 .mono .dot {
-  color: var(--gold);
+  /* Drawn as a hollow gold ring; the DotObserver component adds .lit
+     when the label scrolls into view, filling it gold. */
+  display: inline-block;
+  width: 7px;
+  height: 7px;
   margin-right: 8px;
-  font-size: 8px;
-  vertical-align: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  flex-shrink: 0;
+  font-size: 0;
+  transition: background 0.5s ease;
+}
+.mono .dot.lit {
+  background: var(--gold);
 }
 
 /* ---------- nav ---------- */
@@ -168,32 +182,11 @@ a {
   cursor: pointer;
   border: none;
   font-family: inherit;
-  position: relative;
-  overflow: hidden;
   transition: transform 0.15s ease, border-color 0.3s, color 0.3s,
-    background 0.3s, box-shadow 0.3s;
+    background 0.3s, filter 0.3s;
 }
-/* The sheen: a soft band of light that sweeps across the button on hover. */
-.pill::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -70%;
-  width: 45%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
-  transform: skewX(-20deg);
-  transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-}
-.pill:hover::before {
-  left: 130%;
-}
+/* Minimal hover language: the arrow slides, the surface responds
+   quietly (a small tonal shift), nothing moves or glows. */
 .pill .arr {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -201,7 +194,7 @@ a {
   transform: translateX(4px);
 }
 .pill:hover {
-  box-shadow: 0 0 0 1px rgba(236, 231, 218, 0.15);
+  filter: brightness(1.08);
 }
 .pill:active {
   transform: scale(0.97);
@@ -211,25 +204,17 @@ a {
   color: #1c1608;
 }
 .pill.gold:hover {
-  box-shadow: 0 0 22px rgba(226, 177, 60, 0.25);
+  filter: brightness(1.05);
 }
 .pill.ghost {
   background: transparent;
   color: var(--ink);
   border: 1px solid var(--line);
 }
-.pill.ghost::before {
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(226, 177, 60, 0.18),
-    transparent
-  );
-}
 .pill.ghost:hover {
   border-color: rgba(226, 177, 60, 0.55);
   color: var(--gold);
-  box-shadow: none;
+  filter: none;
 }
 .pill:disabled {
   opacity: 0.6;
@@ -247,6 +232,19 @@ a {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+/* Depth vignette: the field darkens toward the edges, like looking
+   into deep water. Sits above the canvas, below the content. */
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 95% at 32% 22%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
 }
 .hero-content {
   position: relative;
@@ -954,6 +952,56 @@ a {
   cursor: not-allowed;
 }
 
+
+/* ---------- power-up reveals ----------
+   As the visitor scrolls, the page activates: cards flicker on like a
+   filament catching, contents rise in with staggered delays (set via
+   the --pw-delay custom property), and section dots fill gold with a
+   single pulse. DotObserver adds .on when elements scroll into view.
+
+   Engineering note: reveals use ANIMATIONS on the independent
+   `translate` property - never `transition` or `transform` - so they
+   can never collide with component hover effects (tilt cards, resource
+   card lifts) which own those properties. This is deliberate; keep it
+   that way. */
+[data-pw] {
+  opacity: 0;
+}
+[data-pw].on {
+  animation: pwRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--pw-delay, 0s);
+}
+[data-pw="flicker"].on {
+  animation: pwFlicker 0.7s ease-out both;
+  animation-delay: var(--pw-delay, 0s);
+}
+@keyframes pwRise {
+  from {
+    opacity: 0;
+    translate: 0 22px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes pwFlicker {
+  0% { opacity: 0; }
+  9% { opacity: 0.55; }
+  16% { opacity: 0.12; }
+  28% { opacity: 0.85; }
+  36% { opacity: 0.55; }
+  100% { opacity: 1; }
+}
+/* Section dots pulse a soft ring the moment they fill. */
+.mono .dot.lit {
+  animation: dotPulse 0.7s ease-out;
+}
+@keyframes dotPulse {
+  0% { box-shadow: 0 0 0 0 rgba(226, 177, 60, 0.55); }
+  100% { box-shadow: 0 0 0 9px rgba(226, 177, 60, 0); }
+}
+
 /* ---------- responsive + accessibility ---------- */
 
 /* Large tablets and narrow desktops */
@@ -1179,6 +1227,13 @@ a {
   * {
     animation: none !important;
     transition: none !important;
+  }
+  .mono .dot {
+    background: var(--gold);
+  }
+  [data-pw] {
+    opacity: 1 !important;
+    translate: none !important;
   }
   .hero h1 .word span {
     transform: none;

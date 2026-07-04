@@ -59,7 +59,11 @@ docs/                 Deeper documentation (start with AUDIT.md).
 
 **Resources (lib/articles.ts + app/resources/).** Every article lives in `lib/articles.ts` as data: title, excerpt, and body. To add an article, copy an existing entry, change the fields, and give it a unique `slug` (the URL) and `seed` (any number - it generates the little dot-pattern thumbnail). The site picks it up automatically. House rules for articles: no em dashes (use "-"), and every statistic must link to the primary source it came from.
 
-**Buttons.** Every CTA uses the `.pill` class from globals.css. On hover a soft band of light sweeps across the button and the arrow slides right; the button itself never moves. Ghost (outlined) pills warm to gold instead. All of it is pure CSS - no component needed.
+**Buttons.** Every CTA uses the `.pill` class from globals.css. The hover language is deliberately minimal: the arrow slides right and the surface brightens very slightly. Ghost (outlined) pills warm to gold. Nothing moves, nothing glows - pure CSS, no component needed.
+
+**The power-up system (components/DotObserver.tsx + [data-pw] in globals.css).** As the visitor scrolls, the page activates in stages: section label dots fill gold with a single pulse once well within view; cards flicker on like a filament catching, and their contents rise in with staggered delays (--pw-delay). One component runs two IntersectionObservers and renders nothing itself. Engineering rule worth knowing: reveals are CSS animations on the independent `translate` property - never `transition` or `transform` - so they can never collide with hover effects like the tilt cards or resource card lifts. Reduced-motion users and no-JS visitors see everything immediately.
+
+**Favicon (app/icon.svg).** The browser tab icon: a gold dot with ripple rings on graphite - a stone dropped into deep water. Next.js serves any `app/icon.svg` automatically; no config needed.
 
 **Contact (components/Contact.tsx).** The enquiry form at the bottom of the homepage. It opens the visitor's email app with their message pre-filled (a mailto link), so no backend is needed yet. When enquiry volume justifies it, swap the `handleSubmit` function for a POST to an API route that forwards to the inbox - the form itself won't need to change. Pricing card CTAs scroll here and pre-select the tier.
 

@@ -10,9 +10,12 @@ import { useRef, type ReactNode } from "react";
 export default function TiltCard({
   children,
   hot = false,
+  revealDelay,
 }: {
   children: ReactNode;
   hot?: boolean;
+  /** Stagger delay for the scroll power-up, e.g. "0.2s". */
+  revealDelay?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,6 +45,8 @@ export default function TiltCard({
     <div
       ref={ref}
       className={`tilt${hot ? " hot" : ""}`}
+      data-pw="rise"
+      style={revealDelay ? ({ "--pw-delay": revealDelay } as React.CSSProperties) : undefined}
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
     >

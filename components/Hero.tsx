@@ -39,6 +39,7 @@ export default function Hero() {
   return (
     <header className="hero">
       <ParticleField />
+      <div className="hero-vignette" aria-hidden="true" />
       <div className="hero-content">
         <div className="mono" style={{ marginBottom: 22 }}>
           <span className="dot">●</span>Web studio · New Zealand
@@ -49,9 +50,9 @@ export default function Hero() {
         </h1>
         <p className="hero-sub">
           Deep Run builds fast, sharp, fixed-price websites for New
-          Zealand&apos;s trades, hospitality and local businesses. Add a
-          care plan and we manage everything - so your site never breaks,
-          never dates, never disappears.
+          Zealand&apos;s trades, hospitality and local businesses. Live in
+          days, built to last - and looked after for as long as you want
+          us around.
         </p>
         <div className="hero-cta">
           <button className="pill gold" onClick={() => scrollTo("audit")}>

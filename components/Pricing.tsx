@@ -38,7 +38,7 @@ export default function Pricing() {
   return (
     <section className="pricing" id="pricing">
       <div className="wrap">
-        <div className="section-head">
+        <div className="section-head" data-pw="rise">
           <div className="mono">
             <span className="dot">●</span>Pricing
           </div>
@@ -50,8 +50,12 @@ export default function Pricing() {
           </p>
         </div>
         <div className="cards">
-          {TIERS.map((tier) => (
-            <TiltCard key={tier.name} hot={tier.hot}>
+          {TIERS.map((tier, i) => (
+            <TiltCard
+              key={tier.name}
+              hot={tier.hot}
+              revealDelay={`${0.12 + i * 0.09}s`}
+            >
               {tier.hot && <span className="flag">Most popular</span>}
               <h3>{tier.name}</h3>
               <div className="price">{tier.price}</div>

@@ -31,7 +31,7 @@ const PUSH_RADIUS = 3;
 const PUSH_HEIGHT = 2;
 
 // The idle ripple (present even when the mouse is still).
-const RIPPLE_AMPLITUDE = 0.35;
+const RIPPLE_AMPLITUDE = 0.62;
 
 export default function ParticleField() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -135,17 +135,20 @@ export default function ParticleField() {
     function tick() {
       raf = requestAnimationFrame(tick);
       if (!reduced) {
-        t += 0.012;
+        t += 0.015;
         const pos = geometry.attributes.position.array as Float32Array;
         const col = geometry.attributes.color.array as Float32Array;
         for (let i = 0; i < count; i++) {
           const bx = basePositions[i * 3];
           const by = basePositions[i * 3 + 1];
 
-          // Idle ripple: a slow wave travelling across the grid.
+          // Idle ripple: two broad diagonal swells added together.
+          // Additive waves travel as one large organic ripple; the old
+          // sin(x) * cos(y) product created a checkerboard interference
+          // pattern that became visible once the amplitude went up.
           const wave =
-            Math.sin(bx * 0.35 + t) *
-            Math.cos(by * 0.3 + t * 0.8) *
+            (Math.sin(bx * 0.11 + by * 0.07 + t) * 0.7 +
+              Math.sin(bx * 0.05 - by * 0.06 - t * 0.6) * 0.3) *
             RIPPLE_AMPLITUDE;
 
           // Cursor bulge: dots within PUSH_RADIUS lift toward the camera.
@@ -159,7 +162,11 @@ export default function ParticleField() {
           // Colour: dim by default, gold near the cursor / on wave crests.
           scratch
             .copy(dim)
-            .lerp(gold, Math.min(1, push * 1.7 + Math.max(0, wave) * 0.5));
+            .lerp(gold, Math.min(1, push * 1.7 + Math.max(0, wave) * 0.35));
+          // Depth fade: dots lower in the field sit progressively dimmer,
+          // like looking down into deep water.
+          const depth = 0.55 + 0.45 * ((by / (ROWS * GAP)) + 0.5);
+          scratch.multiplyScalar(Math.min(1, Math.max(0.4, depth)));
           scratch.toArray(col, i * 3);
         }
         geometry.attributes.position.needsUpdate = true;

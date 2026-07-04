@@ -9,7 +9,7 @@ export default function Nav() {
           deep<i>run</i>.
         </Link>
         <div className="nav-links">
-          <Link href="/#audit">Site check</Link>
+          <Link href="/#audit">Site Check</Link>
           <Link href="/#pricing">Pricing</Link>
           <Link href="/resources">Resources</Link>
           <Link href="/about">About</Link>
