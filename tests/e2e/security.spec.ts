@@ -31,6 +31,10 @@ test.describe("SSRF protection", () => {
       const res = await request.post(API, {
         data: { url: addr },
       });
+      expect(res.status()).toBe(400);
+      expect(res.headers()["content-type"] || "").toContain(
+        "application/json"
+      );
       const body = await res.json();
       expect(body.error).toContain("Private or internal");
     });

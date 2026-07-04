@@ -5,13 +5,22 @@ test("submit stays disabled until required fields are filled", async ({ page }) 
   const submit = page.getByRole("button", { name: /send enquiry/i });
   await expect(submit).toBeDisabled();
 
+  // Assert each value actually landed - guards against filling before
+  // React hydration attaches its handlers.
   await page.getByLabel("Your name").fill("Test Person");
+  await expect(page.getByLabel("Your name")).toHaveValue("Test Person");
   await expect(submit).toBeDisabled();
 
   await page.getByLabel("Email", { exact: true }).fill("test@example.co.nz");
+  await expect(page.getByLabel("Email", { exact: true })).toHaveValue(
+    "test@example.co.nz"
+  );
   await expect(submit).toBeDisabled();
 
   await page.getByLabel("What do you need?").fill("A new website please.");
+  await expect(page.getByLabel("What do you need?")).toHaveValue(
+    "A new website please."
+  );
   await expect(submit).toBeEnabled();
 });
 
@@ -27,7 +36,13 @@ test("phone field is optional", async ({ page }) => {
 test("pricing CTA scrolls to contact and pre-selects the tier", async ({ page }) => {
   await page.goto("/");
   await page.locator("#pricing").scrollIntoViewIfNeeded();
-  await page.getByRole("link", { name: /get started/i }).first().click();
+  // force: true because the 3D tilt card transforms under the pointer,
+  // which Playwright's strict stability check flags even though real
+  // users click these links without issue.
+  await page
+    .getByRole("link", { name: /get started/i })
+    .first()
+    .click({ force: true });
   await expect(page.locator("#contact")).toBeInViewport();
   await expect(page.locator(".form-tier-badge")).toBeVisible();
 });

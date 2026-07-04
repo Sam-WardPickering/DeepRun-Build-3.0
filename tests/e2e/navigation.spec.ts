@@ -61,6 +61,7 @@ test("privacy page loads and has expected sections", async ({ page }) => {
 test("privacy page is reachable from the footer", async ({ page }) => {
   await page.goto("/");
   await page.locator("footer").getByRole("link", { name: "Privacy" }).click();
+  await expect(page).toHaveURL(/\/privacy/);
   await expect(page.locator("h1")).toContainText("Privacy");
 });
 
@@ -87,6 +88,7 @@ test("about page links to site check and contact", async ({ page }) => {
 test("about page is reachable from nav", async ({ page }) => {
   await page.goto("/");
   await page.locator(".nav-links").getByRole("link", { name: "About" }).click();
+  await expect(page).toHaveURL(/\/about/);
   await expect(page.locator("h1")).toContainText("Built by an engineer");
 });
 

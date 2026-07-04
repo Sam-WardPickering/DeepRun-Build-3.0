@@ -28,6 +28,14 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Anchored sections land below the fixed nav instead of underneath it. */
+#audit,
+#pricing,
+#resources,
+#contact {
+  scroll-margin-top: 84px;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

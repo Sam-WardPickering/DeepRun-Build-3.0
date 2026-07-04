@@ -68,12 +68,13 @@ test("non-URL input is handled gracefully", async ({ page }) => {
 test("enter key triggers the audit", async ({ page }) => {
   await page.getByLabel("Your website address").fill("localhost");
   await page.getByLabel("Your website address").press("Enter");
-  await expect(page.locator(".audit-error")).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator(".audit-error")).toBeVisible();
 });
 
 test("successful check renders scores, findings and contact nudge", async ({
   page,
 }) => {
+  // Register the mock BEFORE navigating so it is guaranteed active.
   await page.route("**/api/audit", (route) =>
     route.fulfill({
       status: 200,
@@ -101,10 +102,12 @@ test("successful check renders scores, findings and contact nudge", async ({
     })
   );
 
+  await page.goto("/");
+  await page.locator("#audit").scrollIntoViewIfNeeded();
   await page.getByLabel("Your website address").fill("example.co.nz");
   await page.getByRole("button", { name: /check my site/i }).click();
 
-  await expect(page.locator(".score-num")).toHaveText("62", { timeout: 8_000 });
+  await expect(page.locator(".score-num")).toHaveText("62");
   // Five findings plus the "get in touch" nudge
   await expect(page.locator(".finding")).toHaveCount(6);
   // The nudge links to contact
@@ -115,6 +118,7 @@ test("successful check renders scores, findings and contact nudge", async ({
 test("findings do not contain prescriptive technical advice", async ({
   page,
 }) => {
+  // Register the mock BEFORE navigating so it is guaranteed active.
   await page.route("**/api/audit", (route) =>
     route.fulfill({
       status: 200,
@@ -136,9 +140,11 @@ test("findings do not contain prescriptive technical advice", async ({
     })
   );
 
+  await page.goto("/");
+  await page.locator("#audit").scrollIntoViewIfNeeded();
   await page.getByLabel("Your website address").fill("bad.example");
   await page.getByRole("button", { name: /check my site/i }).click();
-  await expect(page.locator(".score-num")).toHaveText("22", { timeout: 8_000 });
+  await expect(page.locator(".score-num")).toHaveText("22");
 
   // Findings should diagnose, NOT prescribe fixes (no free consulting)
   const findingsText = await page.locator(".findings").innerText();
