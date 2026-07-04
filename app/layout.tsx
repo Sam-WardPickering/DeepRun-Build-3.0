@@ -24,7 +24,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Deep Run - Websites that win work",
   description:
-    "Fast, sharp, fixed-price websites for New Zealand trades, hospitality and local businesses - built in days and managed for good.",
+    "Fast, sharp, fixed-price websites for New Zealand trades, hospitality and local businesses - live in days, with optional care plans that keep them that way.",
 };
 
 export default function RootLayout({

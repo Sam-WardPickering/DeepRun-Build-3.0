@@ -14,7 +14,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 
-const ROOTS = ["app", "components", "lib"];
+const ROOTS = ["app", "components", "lib", "tests"];
 const EXTS = new Set([".ts", ".tsx", ".css", ".mjs"]);
 const BANNED = [
   { pattern: /\u2014/g, label: "em dash (\u2014)" },

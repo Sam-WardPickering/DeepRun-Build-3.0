@@ -49,8 +49,9 @@ export default function Hero() {
         </h1>
         <p className="hero-sub">
           Deep Run builds fast, sharp, fixed-price websites for New
-          Zealand&apos;s trades, hospitality and local businesses - then
-          manages them so they never break, never date, never disappear.
+          Zealand&apos;s trades, hospitality and local businesses. Add a
+          care plan and we manage everything - so your site never breaks,
+          never dates, never disappears.
         </p>
         <div className="hero-cta">
           <button className="pill gold" onClick={() => scrollTo("audit")}>

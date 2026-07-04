@@ -47,7 +47,7 @@ export const articles: Article[] = [
 <p>Look at your homepage and ask: what does this page want me to do? If the answer isn't obvious within a few seconds - get a quote, book a table, call now - then visitors are left to figure it out themselves, and plenty won't bother. Every page should have one clear action, worded the way a customer would say it.</p>
 
 <h2>What to do about it</h2>
-<p>If you recognised your site in two or more of these, it's worth acting on. You can hand the list to whoever built your site, or run your site through <a href="/#audit">our free AI audit</a> - it checks all of the above and more, and tells you the single most valuable fix in each category. Takes about twenty seconds, and you don't have to give us your email to see the result.</p>
+<p>If you recognised your site in two or more of these, it's worth acting on. You can hand the list to whoever built your site, or run your site through <a href="/#audit">our free AI site check</a> - it checks all of the above and more, and tells you the single most valuable fix in each category. Takes about twenty seconds, and you don't have to give us your email to see the result.</p>
 `,
   },
   {
@@ -79,7 +79,7 @@ export const articles: Article[] = [
 <li>Headings used in order, like a document outline, rather than for decoration.</li>
 </ul>
 <p>None of this is expensive when it's part of the build. It only gets expensive when it's retrofitted - which is one more reason to get it right the first time.</p>
-<p>Accessibility is baked into every site we build, not sold as an add-on. If you're curious where your current site stands, <a href="/#audit">the free audit</a> checks several of these basics as part of its foundations score.</p>
+<p>Accessibility is baked into every site we build, not sold as an add-on. If you're curious where your current site stands, <a href="/#audit">the free site check</a> covers several of these basics as part of its foundations score.</p>
 `,
   },
   {
@@ -103,7 +103,7 @@ export const articles: Article[] = [
 
 <h2>Google is mostly asking the same questions your customers are</h2>
 <p>This is the part the mysticism obscures. Modern search rewards pages that load fast, work on phones, say clearly what the business does and where, and give visitors a reason to stay. That's the same list a customer would give you. There are technical layers on top - structured data, local business profiles, sensible page titles - but they're refinements of the fundamentals, not substitutes for them.</p>
-<p>So before paying anyone for ongoing SEO, get the foundation right: a fast site, honest trust signals, and clear words about what you do and where you do it. That foundation is exactly what our fixed-price builds deliver, and <a href="/#audit">the free audit</a> will show you how your current site measures up against it.</p>
+<p>So before paying anyone for ongoing SEO, get the foundation right: a fast site, honest trust signals, and clear words about what you do and where you do it. That foundation is exactly what our fixed-price builds deliver, and <a href="/#audit">the free site check</a> will show you how your current site measures up against it.</p>
 `,
   },
   {
@@ -133,7 +133,7 @@ export const articles: Article[] = [
 
 <h2>A simple test you can run today</h2>
 <p>Hand your phone to someone who has never seen your site and give them ten seconds. Then ask: what does this business do, where do they work, and how would you contact them? If they can't answer all three, you've found your problem - and it's very fixable.</p>
-<p>Or let the software do it: <a href="/#audit">our free AI audit</a> checks your message, calls to action and credibility signals automatically, and tells you the first thing to fix in each area.</p>
+<p>Or let the software do it: <a href="/#audit">our free AI site check</a> checks your message, calls to action and credibility signals automatically, and tells you the first thing to fix in each area.</p>
 `,
   },
 ];

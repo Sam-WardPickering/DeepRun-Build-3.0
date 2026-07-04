@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
  * in *asterisks* light up gold instead of bone.
  */
 const TEXT =
-  "Most local businesses are brilliant at what they do and let down by a website that isn't. We find the *gap*, show you exactly what *better* looks like, and build it - *fast*, *fixed-price*, managed for *good*.";
+  "Most local businesses are brilliant at what they do and let down by a website that isn't. We find the *gap*, show you exactly what *better* looks like, and build it *fast* at a *fixed price*. And if you want it looked after for good, that's exactly what our *care plan* is for.";
 
 export default function Manifesto() {
   const ref = useRef<HTMLParagraphElement>(null);

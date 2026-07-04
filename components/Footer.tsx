@@ -30,6 +30,7 @@ export default function Footer() {
           <Link href="/#pricing">Pricing</Link>
           <Link href="/resources">Resources</Link>
           <Link href="/#contact">Contact</Link>
+          <Link href="/about">About</Link>
           <Link href="/privacy">Privacy</Link>
         </nav>
         <div className="foot-bottom">
