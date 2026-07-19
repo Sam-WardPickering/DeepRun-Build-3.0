@@ -15,13 +15,16 @@ export default function Footer() {
               deep<i>run</i>.
             </div>
             <div className="mono" style={{ marginTop: 18 }}>
-              <span className="dot">●</span>Aotearoa, New Zealand
+              <span className="dot" />Aotearoa, New Zealand
             </div>
           </div>
           <div className="foot-cta">
             <p className="foot-cta-line">Ready when you are.</p>
             <a href="mailto:hello@deeprun.co.nz" className="pill ghost">
               hello@deeprun.co.nz <span className="arr">→</span>
+            </a>
+            <a href="tel:+642041343263" className="foot-phone">
+              020 4134 3263
             </a>
           </div>
         </div>

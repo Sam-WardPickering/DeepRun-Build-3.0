@@ -85,3 +85,23 @@ The project is a standard Next.js app. On Vercel: import the repo, keep the defa
 - Case studies are only published when they describe real clients with real numbers.
 
 `npm run test:copy` enforces the first two automatically.
+
+## Hero
+
+**The hero (components/Hero.tsx + ParticleField.tsx).** The background is a lava-lamp field rendered in WebGL. Six metaball "wax" blobs rise and fall with area-preserving vertical elongation so they read as real wax, weighted to the right of the screen so the headline stays clean. The headline itself is drawn into the same WebGL layer as a texture, so where a warm blob passes behind the gold "win work." or the grey sub-sentence, those exact letter pixels flip to the page background and pop; the white line never reacts. The blob layout uses a fixed seed, so every visitor sees the same balanced composition. IMPORTANT: because the visible headline is canvas-painted, the real <h1> and <p> are kept in the DOM (visually hidden via the clip technique, not display:none) so screen readers and search engines read the true text. Reduced-motion users get a static frame.
+
+## Security
+
+Hardening applied across the app:
+- **Security headers** (next.config.ts): HSTS, X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, and a Content-Security-Policy locked to self + the Google Fonts origins. `x-powered-by` is suppressed.
+- **Audit API SSRF guard** (app/api/audit/route.ts): only http/https; private/internal hosts refused across IPv4 and IPv6 ranges (including 0.0.0.0, CGNAT 100.64/10, link-local, unique-local); redirects are followed **manually** and the host is re-validated at every hop so a public URL can't bounce into the private network; time + byte caps; per-instance rate limit; no-store + nosniff on responses.
+- **Contact API** (app/api/contact/route.ts): field validation and length caps, a honeypot to drop bots, per-instance rate limiting, HTML-escaped values (no header injection), and no secrets in the client.
+
+## Email delivery
+
+The contact form POSTs to `/api/contact`, which sends via [Resend](https://resend.com). Configure in Vercel (see `.env.example`):
+- `RESEND_API_KEY` - your Resend key
+- `CONTACT_TO` - destination inbox (defaults to hello@deeprun.co.nz)
+- `CONTACT_FROM` - a verified sender on your domain
+
+Until `RESEND_API_KEY` is set, the API returns a fallback flag and the form opens the visitor's mail client (mailto) instead, so **enquiries are never lost** even before email is wired up.

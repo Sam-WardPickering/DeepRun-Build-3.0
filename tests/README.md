@@ -91,3 +91,24 @@ Accessibility failures print the axe rule id, impact, help URL, and
 offending HTML snippets into the terminal. The HTML report
 (`playwright-report/`) has screenshots and traces for everything else.
 Open it with `npx playwright show-report`.
+
+### contact-api.spec.ts
+- API validation: missing fields, invalid email, invalid JSON all return 400
+- Honeypot field causes silent accept (bot drop)
+- GET method returns 405
+- Without email configured, returns fallback flag (form uses mailto)
+- Oversized fields truncated, never crash; header-injection attempts safe
+- UI: successful send shows confirmation; server error shows inline error
+- Honeypot field is present but visually hidden with tabindex -1
+
+### security.spec.ts (expanded)
+- SSRF: expanded private ranges (0.0.0.0, CGNAT 100.64, IPv6 fc00/fe80)
+- URL over max length rejected
+- Rate limit burst handled (429 or local-mode, never crash)
+- Site-wide security headers present (nosniff, DENY, CSP, no x-powered-by)
+
+### homepage.spec.ts (expanded)
+- Hero: real <h1> and sub-text exist in DOM for screen readers/SEO
+- Hero CTAs present and clickable
+- Section dots contain no literal glyph (alignment regression guard)
+- Dot renders as a bordered ring, not text

@@ -20,11 +20,13 @@ export default function AboutPage() {
       <Nav />
       <main className="wrap">
         <article className="article">
-          <Link href="/" className="back-link">
-            ← Back to home
-          </Link>
-          <div className="mono" style={{ marginTop: 28 }}>
-            <span className="dot">●</span>About
+          <div className="article-topbar">
+            <Link href="/" className="back-link">
+              ← Back to home
+            </Link>
+            <div className="mono">
+            <span className="dot" />About
+          </div>
           </div>
           <h1>Websites, held to a higher standard.</h1>
           <div className="article-body" style={{ marginTop: 36 }}>

@@ -39,12 +39,14 @@ export default async function ArticlePage({ params }: Props) {
       <Nav />
       <main className="wrap">
         <article className="article">
-          <Link href="/resources" className="back-link">
-            ← All resources
-          </Link>
-          <div className="mono" style={{ marginTop: 28 }}>
-            <span className="dot">●</span>
-            {article.tag}
+          <div className="article-topbar">
+            <Link href="/resources" className="back-link">
+              ← All resources
+            </Link>
+            <div className="mono">
+              <span className="dot" />
+              {article.tag}
+            </div>
           </div>
           <h1>{article.title}</h1>
           <p className="article-meta">

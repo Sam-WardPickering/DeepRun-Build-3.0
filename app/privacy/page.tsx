@@ -20,11 +20,13 @@ export default function PrivacyPage() {
       <Nav />
       <main className="wrap">
         <article className="article">
-          <Link href="/" className="back-link">
-            ← Back to home
-          </Link>
-          <div className="mono" style={{ marginTop: 28 }}>
-            <span className="dot">●</span>Privacy
+          <div className="article-topbar">
+            <Link href="/" className="back-link">
+              ← Back to home
+            </Link>
+            <div className="mono">
+            <span className="dot" />Privacy
+          </div>
           </div>
           <h1>Privacy, in plain English</h1>
           <div className="article-body" style={{ marginTop: 36 }}>

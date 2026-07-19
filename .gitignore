@@ -4,3 +4,9 @@ out
 .env*.local
 .DS_Store
 *.tsbuildinfo
+
+/playwright-report/
+/test-results/
+
+.env
+.env.local

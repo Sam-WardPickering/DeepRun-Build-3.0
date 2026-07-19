@@ -54,7 +54,7 @@ export default function Manifesto() {
     <section className="manifesto">
       <div className="wrap">
         <div className="mono">
-          <span className="dot">●</span>Why we exist
+          <span className="dot" />Why we exist
         </div>
         <p ref={ref}>{words}</p>
       </div>

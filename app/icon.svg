@@ -1,9 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- Deep Run favicon: a stone dropped into deep water.
-       Gold dot + ripple rings on warm graphite, echoing the particle
-       field and the hollow-to-filled section dots on the site. -->
+  <!-- Deep Run favicon, minimal: a single gold point on warm graphite.
+       Echoes the site's section dots and the ocean point field. -->
   <rect width="64" height="64" rx="14" fill="#100f0d"/>
-  <circle cx="32" cy="33" r="7.5" fill="#e2b13c"/>
-  <circle cx="32" cy="33" r="15" fill="none" stroke="#e2b13c" stroke-width="2.5" opacity="0.55"/>
-  <circle cx="32" cy="33" r="22.5" fill="none" stroke="#ece7da" stroke-width="1.5" opacity="0.18"/>
+  <circle cx="32" cy="32" r="9" fill="#e2b13c"/>
 </svg>

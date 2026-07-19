@@ -16,7 +16,7 @@ export default function ResourcesGrid() {
       <div className="wrap">
         <div className="section-head" data-pw="rise">
           <div className="mono">
-            <span className="dot">●</span>Resources &amp; case studies
+            <span className="dot" />Resources &amp; case studies
           </div>
           <h2>What we&apos;ve learned, written down.</h2>
           <p className="lede">
@@ -35,7 +35,7 @@ export default function ResourcesGrid() {
             >
               <div>
                 <div className="mono">
-                  <span className="dot">●</span>
+                  <span className="dot" />
                   {a.tag}
                 </div>
                 <h3>{a.title}</h3>
@@ -46,13 +46,14 @@ export default function ResourcesGrid() {
             </Link>
           ))}
           <div
-            className="res-card"
+            className="res-card res-card-soon"
             data-pw="rise"
-            style={{ cursor: "default", "--pw-delay": "0.42s" } as React.CSSProperties}
+            aria-disabled="true"
+            style={{ "--pw-delay": "0.42s" } as React.CSSProperties}
           >
             <div>
               <div className="mono">
-                <span className="dot">●</span>Case study
+                <span className="dot" />Case study
               </div>
               <h3>
                 Coming soon - our first client stories, told with real

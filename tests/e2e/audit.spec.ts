@@ -154,3 +154,81 @@ test("findings do not contain prescriptive technical advice", async ({
   expect(findingsText).not.toContain("h1");
   expect(findingsText).not.toContain("alt text");
 });
+test.describe("audit card stays visible on submit (regression)", () => {
+  test("card does not disappear after clicking check", async ({ page }) => {
+    // Mock the audit API so we get a deterministic response.
+    await page.route("**/api/audit", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          url: "https://example.co.nz",
+          https: true,
+          total: 72,
+          verdict: "In good shape",
+          scores: { message: 80, action: 70, content: 70, foundations: 75, credibility: 65 },
+          findings: [],
+        }),
+      })
+    );
+    await page.goto("/#audit");
+    const card = page.locator(".audit-card");
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toBeVisible();
+
+    await page.getByLabel("Your website address").fill("example.co.nz");
+    await page.getByRole("button", { name: /check my site/i }).click();
+
+    // After submit the card MUST remain visible (was disappearing because a
+    // React re-render stripped the observer-added .on class).
+    await expect(card).toBeVisible();
+    // And the score should update to the mocked value.
+    await expect(page.locator(".score-num")).toContainText("72");
+  });
+
+  test("card shows a calm kiwi status line while loading (no rapid cycling)", async ({ page }) => {
+    await page.route("**/api/audit", async (route) => {
+      // Delay so we can observe the scanning state.
+      await new Promise((r) => setTimeout(r, 500));
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          url: "https://example.co.nz", https: true, total: 60,
+          verdict: "ok", scores: { message: 60, action: 60, content: 60, foundations: 60, credibility: 60 }, findings: [],
+        }),
+      });
+    });
+    await page.goto("/#audit");
+    await page.locator(".audit-card").scrollIntoViewIfNeeded();
+    await page.getByLabel("Your website address").fill("example.co.nz");
+    await page.getByRole("button", { name: /check my site/i }).click();
+    // While in flight the card carries .scanning and the status line shows
+    // one of the casual kiwi messages.
+    await expect(page.locator(".audit-card.scanning")).toBeVisible();
+    await expect(page.locator(".score-verdict")).toContainText(
+      /grabbing|having a read|seeing how|checking the words|under the bonnet|earns some trust|tallying/i
+    );
+  });
+
+  test("category values show a calm dash while scanning, not spinning numbers", async ({ page }) => {
+    await page.route("**/api/audit", async (route) => {
+      await new Promise((r) => setTimeout(r, 500));
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          url: "https://example.co.nz", https: true, total: 60,
+          verdict: "ok", scores: { message: 60, action: 60, content: 60, foundations: 60, credibility: 60 }, findings: [],
+        }),
+      });
+    });
+    await page.goto("/#audit");
+    await page.locator(".audit-card").scrollIntoViewIfNeeded();
+    await page.getByLabel("Your website address").fill("example.co.nz");
+    await page.getByRole("button", { name: /check my site/i }).click();
+    // Category values must be a static dash during scan (the rapid random
+    // number cycling was removed for photosensitivity safety).
+    await expect(page.locator(".bar-val").first()).toHaveText("–");
+  });
+});

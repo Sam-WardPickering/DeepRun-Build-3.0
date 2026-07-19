@@ -86,3 +86,16 @@ test("contact section is reachable from the audit findings nudge", async ({ page
   await page.getByRole("link", { name: /get in touch/i }).click();
   await expect(page.locator("#contact")).toBeInViewport();
 });
+
+test.describe("tier badge is removable (regression)", () => {
+  test("clicking the tier badge removes it", async ({ page }) => {
+    // Arrive with a tier preselected via the hash param.
+    await page.goto("/#contact?tier=Business");
+    const badge = page.locator(".form-tier-badge");
+    await expect(badge).toBeVisible();
+    await expect(badge).toContainText(/business tier/i);
+    // It's a button with a remove affordance; clicking clears it.
+    await badge.click();
+    await expect(page.locator(".form-tier-badge")).toHaveCount(0);
+  });
+});

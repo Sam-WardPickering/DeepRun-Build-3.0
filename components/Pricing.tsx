@@ -40,7 +40,7 @@ export default function Pricing() {
       <div className="wrap">
         <div className="section-head" data-pw="rise">
           <div className="mono">
-            <span className="dot">●</span>Pricing
+            <span className="dot" />Pricing
           </div>
           <h2>Fixed price. No surprises. Live in days.</h2>
           <p className="lede">

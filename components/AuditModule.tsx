@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 
-const AuditShader = dynamic(() => import("./AuditShader"), { ssr: false });
 
 /**
  * The AI site check module. A visitor enters a URL, we POST it to
@@ -114,11 +112,43 @@ export default function AuditModule() {
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }
 
+  // While scanning, a single status line steps through what's being checked,
+  // in plain, casual language. It advances at a calm pace (well under the
+  // 3-flashes-per-second WCAG threshold) and simply holds on the last line
+  // if the scan runs long - it never flashes or rapidly cycles. No random
+  // number spinning (that was a photosensitivity risk and has been removed).
+  const SCAN_STATUS = [
+    "Grabbing your page…",
+    "Having a read of your headline…",
+    "Seeing how easy you are to reach…",
+    "Checking the words pull their weight…",
+    "Looking under the bonnet…",
+    "Making sure it earns some trust…",
+    "Tallying it all up…",
+  ];
+  const [statusIdx, setStatusIdx] = useState(0);
+
+  useEffect(() => {
+    if (!scanning) {
+      setStatusIdx(0);
+      return;
+    }
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return; // reduced-motion: hold on the first calm line
+    // Advance once every 900ms, and STOP at the last line (no looping/flashing).
+    const id = setInterval(() => {
+      setStatusIdx((i) => (i < SCAN_STATUS.length - 1 ? i + 1 : i));
+    }, 900);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanning]);
+
   async function runCheck() {
     if (scanning) return;
     setError("");
     setFindings([]);
     setScanning(true);
+    setStatusIdx(0);
     setVerdict(`Reading ${url.trim() || "your site"}…`);
 
     try {
@@ -152,13 +182,12 @@ export default function AuditModule() {
       <div className="wrap">
         <div
           ref={cardRef}
-          className={`audit-card${scanning ? " scanning" : ""}`}
+          className={`audit-card${revealed ? " on" : ""}${scanning ? " scanning" : ""}`}
           data-pw="flicker"
         >
-          <AuditShader />
-          <div className="audit-left" data-pw="rise" style={{ "--pw-delay": "0.15s" } as React.CSSProperties}>
+          <div className={`audit-left${revealed ? " on" : ""}`} data-pw="rise" style={{ "--pw-delay": "0.15s" } as React.CSSProperties}>
             <div className="mono">
-              <span className="dot">●</span>AI site check
+              <span className="dot" />AI site check
             </div>
             <h2>How hard is your website working?</h2>
             <p className="desc">
@@ -196,12 +225,16 @@ export default function AuditModule() {
             )}
           </div>
 
-          <div className="audit-right" data-pw="rise" style={{ "--pw-delay": "0.32s" } as React.CSSProperties}>
+          <div className={`audit-right${revealed ? " on" : ""}`} data-pw="rise" style={{ "--pw-delay": "0.32s" } as React.CSSProperties}>
             <div className="score-top">
-              <span className="score-num">{revealed ? displayTotal : "–"}</span>
+              <span className="score-num">
+                {revealed ? displayTotal : "–"}
+              </span>
               <span className="score-den">/100</span>
             </div>
-            <div className="score-verdict">{verdict}</div>
+            <div className="score-verdict">
+              {scanning ? SCAN_STATUS[statusIdx] : verdict}
+            </div>
             <div className="bars">
               {CATEGORIES.map((cat) => (
                 <div className="bar-row" key={cat}>

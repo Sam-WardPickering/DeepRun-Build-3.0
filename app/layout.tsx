@@ -49,6 +49,28 @@ export default function RootLayout({
         <a href="#main" className="skip-link">
           Skip to content
         </a>
+        {/* LocalBusiness structured data helps Google show the business,
+            its contact details and service area in search + maps. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ProfessionalService",
+              name: "Deep Run",
+              description:
+                "Fast, sharp, fixed-price websites for New Zealand trades, hospitality and local businesses.",
+              url: "https://deeprun.co.nz",
+              email: "hello@deeprun.co.nz",
+              telephone: "+64 20 4134 3263",
+              areaServed: "NZ",
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "NZ",
+              },
+            }),
+          }}
+        />
         {/* If JavaScript is unavailable, reveal everything immediately -
             the power-up choreography must never hide content. */}
         <noscript>

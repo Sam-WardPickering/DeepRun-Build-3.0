@@ -89,8 +89,11 @@ a {
   align-items: center;
 }
 .mono .dot {
-  /* Drawn as a hollow gold ring; the DotObserver component adds .lit
-     when the label scrolls into view, filling it gold. */
+  /* A pure CSS ring - the markup is now an empty <span className="dot" />
+     with NO glyph inside, so nothing can throw off the baseline. The
+     .mono is inline-flex with align-items:center, so the ring sits
+     dead-centre against the label text at every size. DotObserver adds
+     .lit to fill it gold when it scrolls into view. */
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -99,7 +102,7 @@ a {
   border: 1.5px solid var(--gold);
   background: transparent;
   flex-shrink: 0;
-  font-size: 0;
+  line-height: 0;
   transition: background 0.5s ease;
 }
 .mono .dot.lit {
@@ -203,8 +206,13 @@ a {
   background: var(--gold);
   color: #1c1608;
 }
+/* On hover the gold CTA inverts to bone/white with dark text - the mirror
+   of the nav "Start a project" pill (which goes dark->gold). A clear,
+   deliberate state change rather than a faint brightness shift. */
 .pill.gold:hover {
-  filter: brightness(1.05);
+  background: var(--ink);
+  color: #1c1608;
+  filter: none;
 }
 .pill.ghost {
   background: transparent;
@@ -240,11 +248,11 @@ a {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(
-    120% 95% at 32% 22%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
+  /* Slight extra darkening on the left third keeps the headline readable
+     over any stray lava, complementing the right-weighted composition. */
+  background:
+    radial-gradient(120% 95% at 32% 22%, transparent 40%, rgba(0, 0, 0, 0.4) 100%),
+    linear-gradient(90deg, rgba(13, 12, 10, 0.35) 0%, transparent 32%);
 }
 .hero-content {
   position: relative;
@@ -255,41 +263,29 @@ a {
   margin: 0 auto;
   width: 100%;
 }
-.hero h1 {
+/* Everything in the hero is real DOM in one flow, so alignment is automatic.
+   The lava sits purely behind (ParticleField). */
+.hero-mono {
+  margin-bottom: 22px;
+}
+.hero-title {
   font-family: var(--font-display), Georgia, serif;
-  font-weight: 440;
-  font-size: clamp(42px, 7vw, 96px);
+  font-weight: 500;
+  font-size: clamp(44px, 7vw, 96px);
+  line-height: 0.98;
   letter-spacing: -0.03em;
-  line-height: 1.02;
-  max-width: 14ch;
+  max-width: 15ch;
 }
-.hero h1 .word {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-}
-.hero h1 .word span {
-  display: inline-block;
-  transform: translateY(112%);
-  animation: rise 1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-}
-.hero h1 em {
+.hero-title em {
   font-style: italic;
   color: var(--gold);
 }
-@keyframes rise {
-  to {
-    transform: translateY(0);
-  }
-}
 .hero-sub {
-  color: var(--muted);
-  margin-top: 26px;
+  color: #b9b3a6;
   font-size: 16px;
+  line-height: 1.65;
   max-width: 46ch;
-  line-height: 1.75;
-  opacity: 0;
-  animation: fadein 1.2s 0.8s forwards;
+  margin-top: 24px;
 }
 .hero-cta {
   display: flex;
@@ -368,16 +364,6 @@ a {
   gap: 52px;
   position: relative;
   overflow: hidden;
-}
-.audit-shader {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-  pointer-events: none;
-}
-.audit-card.scanning .audit-shader {
-  opacity: 0.22;
 }
 .audit-left,
 .audit-right {
@@ -462,7 +448,24 @@ a {
   margin-top: 4px;
   font-size: 12.5px;
   color: var(--muted);
+  transition: color 0.3s ease;
 }
+/* While scanning, the status line shows the casual kiwi copy in gold, with
+   a slow, gentle breathe (3s cycle - well under the 3-per-second flashing
+   threshold, so it's photosensitivity-safe). No rapid cycling anywhere. */
+.audit-card.scanning .score-verdict {
+  color: var(--gold);
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.02em;
+  animation: statusBreathe 3s ease-in-out infinite;
+}
+@keyframes statusBreathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+/* (The trailing indicator dot was removed - it floated oddly beside the
+   status copy. The gentle text breathe is signal enough.) */
+
 .bars {
   margin-top: 30px;
   display: flex;
@@ -749,6 +752,8 @@ a {
   line-height: 1.7;
 }
 .back-link {
+  display: block;
+  width: fit-content;
   color: var(--muted);
   font-size: 13px;
   transition: color 0.25s;
@@ -925,6 +930,7 @@ a {
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: rgba(226, 177, 60, 0.5);
+  box-shadow: 0 0 0 3px rgba(226, 177, 60, 0.08);
 }
 .form-group input::placeholder,
 .form-group textarea::placeholder {
@@ -938,18 +944,47 @@ a {
 }
 .form-tier-badge {
   margin-bottom: 18px;
-  padding: 10px 16px;
+  padding: 10px 14px 10px 16px;
   background: rgba(226, 177, 60, 0.08);
   border: 1px solid rgba(226, 177, 60, 0.2);
   border-radius: 10px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.25s, border-color 0.25s;
+}
+.form-tier-badge:hover {
+  background: rgba(226, 177, 60, 0.14);
+  border-color: rgba(226, 177, 60, 0.4);
+}
+.form-tier-badge .mono {
+  color: var(--gold);
+}
+.form-tier-badge .tier-remove {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.form-tier-badge:hover .tier-remove {
+  color: var(--gold);
 }
 .form-submit {
   margin-top: 4px;
 }
 .form-submit.disabled {
-  opacity: 0.4;
+  /* A clearly inactive surface rather than a dim gold that reads as muddy
+     brown. Becomes full gold the moment the form is valid. */
+  background: rgba(236, 231, 218, 0.08);
+  color: var(--muted);
+  opacity: 1;
   cursor: not-allowed;
+}
+.form-submit.disabled:hover {
+  background: rgba(236, 231, 218, 0.08);
+  filter: none;
 }
 
 
@@ -965,33 +1000,33 @@ a {
    card lifts) which own those properties. This is deliberate; keep it
    that way. */
 [data-pw] {
-  opacity: 0;
+  /* Content is VISIBLE by default - no opacity:0 start state. This is
+     deliberate: the old flicker gated everything behind opacity:0 until an
+     observer fired, which could leave cards invisible AND unclickable if the
+     observer missed. Now the reveal is purely additive polish on top of
+     already-visible, already-clickable content. */
+  opacity: 1;
 }
+/* A gentle one-time rise when scrolled into view. No flicker. The element is
+   already visible, so this only nudges it up into place - it can never trap
+   content or block clicks. */
 [data-pw].on {
-  animation: pwRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pwRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--pw-delay, 0s);
 }
+/* Flicker removed entirely (was distracting and could hide content). The
+   "flicker" variant now uses the same calm rise. */
 [data-pw="flicker"].on {
-  animation: pwFlicker 0.7s ease-out both;
+  animation: pwRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--pw-delay, 0s);
 }
 @keyframes pwRise {
   from {
-    opacity: 0;
-    translate: 0 22px;
+    translate: 0 14px;
   }
   to {
-    opacity: 1;
     translate: 0 0;
   }
-}
-@keyframes pwFlicker {
-  0% { opacity: 0; }
-  9% { opacity: 0.55; }
-  16% { opacity: 0.12; }
-  28% { opacity: 0.85; }
-  36% { opacity: 0.55; }
-  100% { opacity: 1; }
 }
 /* Section dots pulse a soft ring the moment they fill. */
 .mono .dot.lit {
@@ -1035,9 +1070,8 @@ a {
     gap: 36px;
     padding: 30px;
   }
-  .hero h1 {
-    font-size: clamp(36px, 8vw, 64px);
-  }
+  /* Hero headline is canvas-drawn and scales with viewport width in
+     ParticleField.drawText; no h1 font rule needed here. */
   .manifesto p {
     font-size: clamp(22px, 4vw, 34px);
   }
@@ -1062,14 +1096,6 @@ a {
   }
   .hero {
     min-height: 90vh;
-  }
-  .hero h1 {
-    font-size: clamp(32px, 10vw, 48px);
-    max-width: 100%;
-  }
-  .hero-sub {
-    font-size: 14px;
-    max-width: 100%;
   }
   .hero-cta {
     flex-direction: column;
@@ -1235,10 +1261,6 @@ a {
     opacity: 1 !important;
     translate: none !important;
   }
-  .hero h1 .word span {
-    transform: none;
-  }
-  .hero-sub,
   .hero-cta {
     opacity: 1;
   }
@@ -1247,5 +1269,341 @@ a {
   }
   .w.key {
     color: var(--gold);
+  }
+}
+
+/* ---------- contact form: honeypot, success, error ---------- */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form-success h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  font-size: 26px;
+  margin: 14px 0 10px;
+}
+.form-success p {
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 40ch;
+}
+.form-error {
+  color: #e5736b;
+  font-size: 13.5px;
+  margin: 4px 0 2px;
+}
+
+/* Footer phone link, sits under the email pill in the CTA column. */
+.foot-phone {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.foot-phone:hover {
+  color: var(--gold);
+}
+
+/* ---------- autofill fix ----------
+   Chrome/Safari force a pale background + dark text on autofilled inputs,
+   which broke our dark theme (email/phone went white). You can't set
+   background directly on :-webkit-autofill, so we paint over it with a
+   large inset box-shadow in our surface colour and force the text colour.
+   The long transition delay stops the yellow flash on autofill. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--ink);
+  transition: background-color 5000s ease-in-out 0s;
+}
+/* The audit input sits on the surface colour, not the page bg. */
+.audit-input input:-webkit-autofill,
+.audit-input input:-webkit-autofill:hover,
+.audit-input input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+}
+
+/* Article header topbar: back-link and section tag on one clean row,
+   separated by a subtle divider, vertically aligned. Replaces the old
+   awkward two-line stack. */
+.article-topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 30px;
+}
+.article-topbar .back-link {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+}
+.article-topbar .back-link::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 13px;
+  background: var(--line);
+  margin-left: 18px;
+}
+.article-topbar .mono {
+  margin: 0;
+}
+
+
+
+/* ---------- coming-soon card ----------
+   The case-study placeholder is not a link. It previously looked identical
+   to the clickable article cards, which read as "broken - won't open".
+   Now it's visibly a placeholder: dimmed, dashed border, no hover lift,
+   and a small "soon" affordance. */
+.res-card-soon {
+  cursor: default;
+  opacity: 0.55;
+  border-style: dashed;
+}
+.res-card-soon:hover {
+  transform: none;
+  border-color: var(--line);
+  background: var(--surface);
+}
+.res-card-soon .mono {
+  color: var(--gold);
+}
+
+/* ---------- footer polish ----------
+   Tightened rhythm: clear top block (wordmark left, contact right), a firm
+   nav rule line, and a quiet legal line. The email pill and phone stack
+   with breathing room and align to the right edge cleanly. */
+.foot-cta .pill {
+  display: inline-flex;
+}
+.foot-phone {
+  display: block;
+  margin-top: 14px;
+}
+.foot-nav {
+  row-gap: 14px;
+}
+@media (max-width: 600px) {
+  .foot-cta .pill {
+    width: 100%;
+    justify-content: center;
+  }
+  .foot-phone {
+    text-align: left;
+  }
+}
+
+/* ---------- contact (get in touch) polish ----------
+   The left rail: heading, blurb, then the two contact-method cards with
+   even spacing and a hover that matches the rest of the site. Inputs get
+   consistent height and the layout breathes. */
+.contact-method {
+  transition: border-color 0.3s, background 0.3s;
+}
+.contact-method:hover {
+  border-color: rgba(226, 177, 60, 0.35);
+  background: var(--surface-2);
+}
+.form-group label {
+  margin-bottom: 8px;
+}
+.form-group input,
+.form-group textarea {
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* ---------- mobile: audit input + footer, decisive pass ----------
+   These land at the end of the stylesheet so they win the cascade over the
+   earlier mobile rules. */
+@media (max-width: 600px) {
+  /* The checker input: on phones the boxed input-with-button-inside pattern
+     reads clunky, so it becomes two clean stacked controls - a full-width
+     field, then a full-width button with its own presence. */
+  .audit-input {
+    flex-direction: column;
+    align-items: stretch;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    gap: 12px;
+    max-width: none;
+  }
+  .audit-input:focus-within {
+    border-color: transparent;
+  }
+  .audit-input input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 15px 18px;
+    font-size: 16px; /* 16px+ prevents iOS auto-zoom on focus */
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .audit-input input:focus {
+    border-color: rgba(226, 177, 60, 0.5);
+    box-shadow: 0 0 0 3px rgba(226, 177, 60, 0.08);
+  }
+  .audit-input .pill {
+    width: 100%;
+    justify-content: center;
+    padding: 15px 24px;
+  }
+
+  /* Footer, centered: on a narrow column, symmetry is what reads as
+     designed. The wordmark becomes a centered monument; the place line,
+     contact lines, nav and legal line all sit on its axis, spaced on a
+     single rhythm scale (10 / 24 / 32). The "Ready when you are." heading
+     and second tagline stay desktop-only. */
+  .site-footer {
+    padding: 56px 0 32px;
+    text-align: center;
+  }
+  .foot-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .foot-logo {
+    font-size: clamp(32px, 10vw, 40px);
+  }
+  .foot-cta {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .foot-cta-line {
+    display: none;
+  }
+  /* Email and phone: two matched quiet lines, same mono voice, each with
+     a small icon sized to the text (14px against 13px type). The email
+     drops its pill costume entirely on mobile - two equal contact lines
+     read balanced; a button over a text line never did. Icons are
+     CSS masks so they inherit the text colour, including hover. */
+  .foot-cta .pill {
+    width: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    justify-content: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono), monospace;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .foot-cta .pill:hover {
+    background: none;
+    color: var(--gold);
+  }
+  .foot-cta .pill .arr {
+    display: none;
+  }
+  .foot-cta .pill::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: currentColor;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>') center / contain no-repeat;
+  }
+  .foot-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    font-family: var(--font-mono), monospace;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0;
+    border: none;
+    border-radius: 0;
+  }
+  .foot-phone::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: currentColor;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>') center / contain no-repeat;
+  }
+  .foot-phone:hover {
+    color: var(--gold);
+  }
+  .foot-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 26px;
+    row-gap: 10px;
+    margin-top: 32px;
+  }
+  .foot-nav a {
+    padding: 6px 2px; /* honest tap targets without visual weight */
+  }
+  .foot-bottom {
+    margin-top: 24px;
+    gap: 6px;
+    font-size: 12px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .foot-bottom span:last-child {
+    display: none;
+  }
+}
+
+
+/* ---------- mobile designer pass: sitewide rhythm ---------- */
+@media (max-width: 600px) {
+  /* Top nav: give the bar honest height and keep the CTA from crowding
+     the logo on small screens. */
+  .nav-inner {
+    padding: 14px 20px;
+  }
+  .site-nav .pill {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+  /* Section intros: a comfortable reading measure and consistent space
+     under every section heading, so each section starts with the same
+     breath. */
+  .section-head .lede {
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 34ch;
+  }
+  .section-head h2 {
+    letter-spacing: -0.02em;
+  }
+  /* Sub-text in the hero takes the full column on phones. */
+  .hero-sub {
+    max-width: none;
+    font-size: 15px;
   }
 }

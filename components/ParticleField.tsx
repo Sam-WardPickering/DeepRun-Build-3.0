@@ -4,34 +4,50 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 /**
- * The hero background: a grid of dots that
- *   1. ripples gently on its own (a slow travelling wave), and
- *   2. bulges away from the cursor, with nearby dots turning gold.
+ * The hero background: ocean waves seen from above ("O2 Vast").
  *
- * Cursor accuracy: we convert the pointer position into the 3D world
- * coordinates of the plane the dots sit on (z = 0). To do that we measure
- * how much world space the camera can actually see at z = 0:
+ * A wide, deep field of points sits below the sightline with the camera
+ * high and angled down, so the surface swells like the open sea rolling
+ * away to a horizon. Depth and scale come from two things: rows of points
+ * bunch non-linearly toward the horizon (near rows spaced wide, far rows
+ * tight), and brightness fades with distance so the field dissolves into
+ * the dark rather than ending at a hard line. Points are jittered off any
+ * regular grid, which makes coherent banding mathematically impossible
+ * (a lesson learned the hard way with the earlier lattice heroes).
  *
- *   visibleHalfHeight = tan(fov / 2) * cameraDistance
- *   visibleHalfWidth  = visibleHalfHeight * canvasAspectRatio
+ * The swell is three layered long-period sine waves - pronounced but calm,
+ * hypnotic, like watching the sea from height. There is deliberately NO
+ * cursor interaction: the motion is self-contained. Reduced-motion users
+ * get a static frame of the same scene.
  *
- * then scale the pointer's normalised position (-1..1, measured against
- * the canvas rect, not the window) by those values. This is what makes
- * the dots track the mouse exactly, at any window size or scroll position.
+ * The headline is real DOM in Hero.tsx, layered above this canvas - no
+ * canvas text, no alignment coupling.
  */
 
-const COLS = 96;
-const ROWS = 52;
-const GAP = 0.6;
-const CAMERA_Z = 24;
-const FOV = 55;
+// O2 "Vast": high camera, small points, wide horizon.
+const CAM_Y = 22;
+const CAM_Z = 12;
+const LOOK_Y = -7;
+const AMP = 1.5;
+const SPEED = 0.5; // slowed from 0.7 - a longer, more hypnotic swell
 
-// How strongly dots push away from the cursor, and the radius of effect.
-const PUSH_RADIUS = 3;
-const PUSH_HEIGHT = 2;
-
-// The idle ripple (present even when the mouse is still).
-const RIPPLE_AMPLITUDE = 0.62;
+/**
+ * Device-aware field setup. Desktop gets a wide, dense field; phones get a
+ * tighter, lighter one (fewer points = smooth on mobile GPUs, and a narrow
+ * viewport doesn't need 240 world-units of water). SPAN is deliberately
+ * wider than any viewport can show so the field's true edges sit outside
+ * the frame - and an edge-luminance falloff (see the frame loop) diffuses
+ * the last stretch into darkness so no boundary is ever visible.
+ */
+function fieldConfig(width: number) {
+  if (width < 600) {
+    return { NX: 110, NZ: 96, SPAN: 150, DEPTH: 190, POINT_SIZE: 0.13 };
+  }
+  if (width < 1100) {
+    return { NX: 150, NZ: 110, SPAN: 210, DEPTH: 200, POINT_SIZE: 0.11 };
+  }
+  return { NX: 200, NZ: 130, SPAN: 300, DEPTH: 210, POINT_SIZE: 0.1 };
+}
 
 export default function ParticleField() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -44,50 +60,56 @@ export default function ParticleField() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
+    const { NX, NZ, SPAN, DEPTH, POINT_SIZE } = fieldConfig(
+      mount.clientWidth || window.innerWidth
+    );
+    const COUNT = NX * NZ;
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
-    camera.position.z = CAMERA_Z;
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 600);
+    camera.position.set(0, CAM_Y, CAM_Z);
+    camera.lookAt(0, LOOK_Y, -70);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
-    // Build the flat grid of points once; animate positions per frame.
-    const count = COLS * ROWS;
-    const positions = new Float32Array(count * 3);
-    const basePositions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const gold = new THREE.Color("#e2b13c");
-    const dim = new THREE.Color("#2b2a24");
-
-    let k = 0;
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const px = (x - COLS / 2) * GAP;
-        const py = (y - ROWS / 2) * GAP;
-        positions[k * 3] = basePositions[k * 3] = px;
-        positions[k * 3 + 1] = basePositions[k * 3 + 1] = py;
-        positions[k * 3 + 2] = basePositions[k * 3 + 2] = 0;
-        dim.toArray(colors, k * 3);
-        k++;
-      }
-    }
-
+    const positions = new Float32Array(COUNT * 3);
+    const base = new Float32Array(COUNT * 3);
+    const colors = new Float32Array(COUNT * 3);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     const material = new THREE.PointsMaterial({
-      size: 0.075,
+      size: POINT_SIZE,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
+      depthWrite: false,
+      sizeAttenuation: true,
     });
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
+    scene.add(new THREE.Points(geometry, material));
 
-    // World-space cursor position on the z = 0 plane.
-    // Start far away so nothing reacts until the mouse moves.
-    const mouse = new THREE.Vector2(9999, 9999);
+    // Lay the field out: rows bunch toward the horizon (perspective of
+    // spacing) and every point is jittered off-grid.
+    let i = 0;
+    for (let zi = 0; zi < NZ; zi++) {
+      const zt = zi / (NZ - 1);
+      const z = -Math.pow(zt, 1.8) * DEPTH;
+      for (let xi = 0; xi < NX; xi++) {
+        const x =
+          (xi / (NX - 1) - 0.5) * SPAN + (Math.random() - 0.5) * (SPAN / NX);
+        base[i * 3] = positions[i * 3] = x;
+        base[i * 3 + 1] = positions[i * 3 + 1] = 0;
+        base[i * 3 + 2] = positions[i * 3 + 2] =
+          z + (Math.random() - 0.5) * (DEPTH / NZ);
+        i++;
+      }
+    }
+
+    const bone = new THREE.Color("#ece7da");
+    const gold = new THREE.Color("#e2b13c");
+    const scratch = new THREE.Color();
 
     function resize() {
       if (!mount) return;
@@ -98,94 +120,58 @@ export default function ParticleField() {
       camera.updateProjectionMatrix();
     }
     resize();
-
-    function onPointerMove(e: PointerEvent) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      // Ignore pointer positions outside the canvas (e.g. scrolled past hero).
-      if (
-        e.clientX < rect.left ||
-        e.clientX > rect.right ||
-        e.clientY < rect.top ||
-        e.clientY > rect.bottom
-      ) {
-        mouse.set(9999, 9999);
-        return;
-      }
-      // Normalise to -1..1 relative to the canvas itself.
-      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      // Project through the camera frustum to world units at z = 0.
-      const halfH = Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * CAMERA_Z;
-      const halfW = halfH * (rect.width / rect.height);
-      mouse.set(nx * halfW, ny * halfH);
-    }
-
-    function onPointerLeave() {
-      mouse.set(9999, 9999);
-    }
-
-    window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("resize", resize);
-    document.addEventListener("pointerleave", onPointerLeave);
 
-    const scratch = new THREE.Color();
-    let t = 0;
     let raf = 0;
-
-    function tick() {
-      raf = requestAnimationFrame(tick);
-      if (!reduced) {
-        t += 0.015;
-        const pos = geometry.attributes.position.array as Float32Array;
-        const col = geometry.attributes.color.array as Float32Array;
-        for (let i = 0; i < count; i++) {
-          const bx = basePositions[i * 3];
-          const by = basePositions[i * 3 + 1];
-
-          // Idle ripple: two broad diagonal swells added together.
-          // Additive waves travel as one large organic ripple; the old
-          // sin(x) * cos(y) product created a checkerboard interference
-          // pattern that became visible once the amplitude went up.
-          const wave =
-            (Math.sin(bx * 0.11 + by * 0.07 + t) * 0.7 +
-              Math.sin(bx * 0.05 - by * 0.06 - t * 0.6) * 0.3) *
-            RIPPLE_AMPLITUDE;
-
-          // Cursor bulge: dots within PUSH_RADIUS lift toward the camera.
-          const dx = bx - mouse.x;
-          const dy = by - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const push = Math.max(0, PUSH_RADIUS - dist) / PUSH_RADIUS;
-
-          pos[i * 3 + 2] = wave + push * PUSH_HEIGHT;
-
-          // Colour: dim by default, gold near the cursor / on wave crests.
-          scratch
-            .copy(dim)
-            .lerp(gold, Math.min(1, push * 1.7 + Math.max(0, wave) * 0.35));
-          // Depth fade: dots lower in the field sit progressively dimmer,
-          // like looking down into deep water.
-          const depth = 0.55 + 0.45 * ((by / (ROWS * GAP)) + 0.5);
-          scratch.multiplyScalar(Math.min(1, Math.max(0.4, depth)));
-          scratch.toArray(col, i * 3);
-        }
-        geometry.attributes.position.needsUpdate = true;
-        geometry.attributes.color.needsUpdate = true;
+    let t = 0;
+    function frame() {
+      raf = requestAnimationFrame(frame);
+      if (!reduced) t += 0.014 * SPEED;
+      for (let k = 0; k < COUNT; k++) {
+        const bx = base[k * 3];
+        const bz = base[k * 3 + 2];
+        // Three layered long-period swells: pronounced, calm, ocean-like.
+        const h =
+          Math.sin(bx * 0.035 + bz * 0.05 + t * 0.9) * AMP +
+          Math.sin(bz * 0.02 - t * 0.5) * AMP * 0.7 +
+          Math.sin(bx * 0.012 + bz * 0.03 + t * 0.35) * AMP * 0.5;
+        positions[k * 3 + 1] = h - 7;
+        // Distance fade: near rows bright, far rows dissolve into dark.
+        const depthT = 1 + bz / DEPTH;
+        const fade = Math.pow(Math.max(0, depthT), 1.5);
+        // Layout balance: the page is left-weighted (headline, sub, CTAs all
+        // sit left), so the field stays calm and dim beneath the text and
+        // brightens toward the right where the eye can rest on the water.
+        const lx = bx / SPAN + 0.5; // 0 left -> 1 right
+        const sideBias =
+          0.35 + 0.65 * Math.min(1, Math.max(0, (lx - 0.18) / 0.55));
+        // Edge diffusion: light falls away gradually over the outer 30% of
+        // the field on each side, so the ocean dissolves into darkness long
+        // before its true geometric edge. No visible cut-off = vast.
+        const ex = Math.abs(bx) / (SPAN / 2); // 0 centre -> 1 edge
+        const edgeFade =
+          ex <= 0.7 ? 1 : Math.max(0, 1 - (ex - 0.7) / 0.3) ** 1.6;
+        const lum = (0.05 + 0.55 * fade) * sideBias * edgeFade;
+        scratch
+          .copy(bone)
+          .multiplyScalar(lum)
+          .lerp(gold, Math.max(0, h) * 0.1 * fade * sideBias * edgeFade);
+        scratch.toArray(colors, k * 3);
       }
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
       renderer.render(scene, camera);
     }
-    tick();
+    frame();
 
-    // Clean up everything when the component unmounts.
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("resize", resize);
-      document.removeEventListener("pointerleave", onPointerLeave);
       geometry.dispose();
       material.dispose();
       renderer.dispose();
-      mount.removeChild(renderer.domElement);
+      if (renderer.domElement.parentNode === mount)
+        mount.removeChild(renderer.domElement);
     };
   }, []);
 
