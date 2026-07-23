@@ -32,6 +32,15 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    // iPad Mini's viewport/touch profile (768x1024, a genuinely common real
+    // tablet size) with the engine forced to Chromium - Playwright's iOS
+    // device presets default to WebKit, which isn't installed here or
+    // required; only `npx playwright install chromium` is needed for all
+    // three projects.
+    {
+      name: "tablet",
+      use: { ...devices["iPad Mini"], defaultBrowserType: "chromium" },
+    },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {

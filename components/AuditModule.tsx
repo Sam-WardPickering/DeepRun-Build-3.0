@@ -26,12 +26,24 @@ const DOTS_PER_ROW = 22;
 
 // The example scores shown before anyone runs a real check.
 const EXAMPLE_SCORES: Record<Category, number> = {
-  message: 48,
-  action: 35,
-  content: 51,
-  foundations: 44,
-  credibility: 32,
+  message: 62,
+  action: 48,
+  content: 66,
+  foundations: 57,
+  credibility: 57,
 };
+
+/**
+ * A one-word read on the score, shown as a chip beside the number. The
+ * long sentence underneath explains; this gives the eye something to land
+ * on instantly.
+ */
+function shortVerdict(total: number): string {
+  if (total >= 80) return "Strong";
+  if (total >= 60) return "Decent";
+  if (total >= 40) return "Underperforming";
+  return "Losing work";
+}
 const EXAMPLE_VERDICT =
   "Example result - run your own site to see where it stands.";
 
@@ -231,6 +243,9 @@ export default function AuditModule() {
                 {revealed ? displayTotal : "–"}
               </span>
               <span className="score-den">/100</span>
+              {revealed && !scanning && (
+                <span className="score-chip">{shortVerdict(displayTotal)}</span>
+              )}
             </div>
             <div className="score-verdict">
               {scanning ? SCAN_STATUS[statusIdx] : verdict}

@@ -148,7 +148,7 @@ a {
 }
 .nav-links a {
   position: relative;
-  transition: color 0.25s;
+  transition: color 0.3s;
 }
 .nav-links a:not(.pill)::after {
   content: "";
@@ -249,7 +249,7 @@ a {
   z-index: 1;
   pointer-events: none;
   /* Slight extra darkening on the left third keeps the headline readable
-     over any stray lava, complementing the right-weighted composition. */
+     over the ocean field, complementing the right-weighted composition. */
   background:
     radial-gradient(120% 95% at 32% 22%, transparent 40%, rgba(0, 0, 0, 0.4) 100%),
     linear-gradient(90deg, rgba(13, 12, 10, 0.35) 0%, transparent 32%);
@@ -444,6 +444,22 @@ a {
   font-size: 18px;
   font-family: var(--font-display), Georgia, serif;
 }
+/* A one-word read on the score, sitting beside the number so the eye lands
+   on meaning immediately rather than having to parse the sentence below. */
+.score-chip {
+  margin-left: 14px;
+  align-self: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(226, 177, 60, 0.35);
+  background: rgba(226, 177, 60, 0.08);
+  padding: 6px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 .score-verdict {
   margin-top: 4px;
   font-size: 12.5px;
@@ -467,16 +483,21 @@ a {
    status copy. The gentle text breathe is signal enough.) */
 
 .bars {
-  margin-top: 30px;
+  margin-top: 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  border-top: 1px solid var(--line);
 }
+/* Each category is a row in a report: hairline-separated, evenly padded,
+   label left, meter centre, score right. The rules give the panel real
+   structure and make the five categories scan as one considered document. */
 .bar-row {
   display: grid;
-  grid-template-columns: 106px 1fr 34px;
+  grid-template-columns: 116px 1fr 34px;
   gap: 14px;
   align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
 }
 .bar-label {
   font-family: var(--font-mono), monospace;
@@ -738,7 +759,7 @@ a {
 .article-body a {
   color: var(--gold);
   border-bottom: 1px solid rgba(226, 177, 60, 0.35);
-  transition: border-color 0.25s;
+  transition: border-color 0.3s;
 }
 .article-body a:hover {
   border-color: var(--gold);
@@ -756,7 +777,7 @@ a {
   width: fit-content;
   color: var(--muted);
   font-size: 13px;
-  transition: color 0.25s;
+  transition: color 0.3s;
 }
 .back-link:hover {
   color: var(--gold);
@@ -771,8 +792,29 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 40px;
+  gap: 60px;
   flex-wrap: wrap;
+}
+/* Left column: wordmark, place line, and the nav links grouped beneath -
+   a proper brand block instead of links stranded in their own wide band. */
+.foot-brand {
+  display: flex;
+  flex-direction: column;
+}
+.foot-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.foot-place-icon {
+  flex-shrink: 0;
+  color: var(--gold);
 }
 .foot-logo {
   font-family: var(--font-display), Georgia, serif;
@@ -787,21 +829,28 @@ a {
 }
 .foot-cta {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  /* Default stretch: both pills fill the column, whose width is set by the
+     widest content (the email). That gives an equal-width, tidy stack with
+     no hard-coded dimensions. */
+  align-items: stretch;
 }
 .foot-cta-line {
   font-family: var(--font-display), Georgia, serif;
   font-size: clamp(18px, 2vw, 24px);
   font-weight: 460;
   letter-spacing: -0.01em;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
+/* Nav now sits inside the brand block, so it drops its old full-width rule
+   and instead reads as a compact link group under the wordmark. */
 .foot-nav {
   display: flex;
-  gap: 28px;
   flex-wrap: wrap;
-  margin-top: 56px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line);
+  column-gap: 30px;
+  row-gap: 12px;
+  margin-top: 34px;
 }
 .foot-nav a {
   font-family: var(--font-mono), monospace;
@@ -809,12 +858,14 @@ a {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
-  transition: color 0.25s;
+  transition: color 0.3s;
 }
 .foot-nav a:hover {
   color: var(--gold);
 }
 .foot-bottom {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -826,7 +877,7 @@ a {
 }
 .foot-bottom a {
   color: var(--muted);
-  transition: color 0.25s;
+  transition: color 0.3s;
 }
 .foot-bottom a:hover {
   color: var(--gold);
@@ -854,6 +905,13 @@ a {
   grid-template-columns: 1fr 1.2fr;
   gap: 60px;
 }
+/* The two columns bottom-align: the direct email/phone cards are pushed to
+   the foot of the left column so their base sits level with the Send button
+   on the right, instead of the button hanging lower than the phone card. */
+.contact-left {
+  display: flex;
+  flex-direction: column;
+}
 .contact-left h2 {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 480;
@@ -871,7 +929,11 @@ a {
   line-height: 1.7;
 }
 .contact-direct {
-  margin-top: 36px;
+  /* auto pushes the cards to the foot of the left column so they bottom-align
+     with the Send button opposite; the min keeps a sensible gap when the
+     column is short. */
+  margin-top: auto;
+  padding-top: 36px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -953,7 +1015,7 @@ a {
   gap: 12px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.25s, border-color 0.25s;
+  transition: background 0.3s, border-color 0.3s;
 }
 .form-tier-badge:hover {
   background: rgba(226, 177, 60, 0.14);
@@ -966,12 +1028,13 @@ a {
   font-size: 16px;
   line-height: 1;
   color: var(--muted);
-  transition: color 0.25s;
+  transition: color 0.3s;
 }
 .form-tier-badge:hover .tier-remove {
   color: var(--gold);
 }
 .form-submit {
+  align-self: flex-start;
   margin-top: 4px;
 }
 .form-submit.disabled {
@@ -1044,6 +1107,62 @@ a {
   .cards {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* A touch shorter than the full-viewport desktop hero, and with a
+     stronger fade toward the bottom (added below) - together these keep
+     less of the point field visible without scrolling, so the composition
+     reads as a considered, minimal crop rather than a long expanse of
+     texture competing with the text above it. */
+  .hero {
+    min-height: 90vh;
+  }
+  .hero-vignette {
+    background:
+      radial-gradient(120% 95% at 32% 22%, transparent 40%, rgba(0, 0, 0, 0.4) 100%),
+      linear-gradient(90deg, rgba(13, 12, 10, 0.35) 0%, transparent 32%),
+      linear-gradient(180deg, transparent 0%, transparent 46%, rgba(13, 12, 10, 0.55) 78%, rgba(13, 12, 10, 0.92) 100%);
+  }
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .hero-mono {
+    justify-content: center;
+  }
+  .hero-title {
+    max-width: 13ch;
+  }
+  .hero-sub {
+    text-align: center;
+    max-width: 38ch;
+  }
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+  }
+  .hero-cta .pill.gold {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
+  .hero-cta .pill.ghost {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    color: var(--muted);
+  }
+  /* The scroll hint is a desktop nicety everywhere below desktop width -
+     the composition reads complete without it, and one fewer small
+     element keeps the result calm rather than busy. */
+  .scroll-hint {
+    display: none;
+  }
 }
 
 /* Tablets */
@@ -1057,7 +1176,7 @@ a {
   .hero-content {
     padding: 0 5vw;
   }
-  .nav-links a:not(.pill) {
+  .nav-links {
     display: none;
   }
   .audit-card {
@@ -1081,6 +1200,28 @@ a {
   .res-grid {
     grid-template-columns: 1fr;
   }
+  /* Section vertical rhythm scaled for tablet: the desktop paddings
+     (130-160px) leave big empty bands on a ~768px-tall-ish tablet view,
+     which reads as unfinished. These tighter values keep each section
+     feeling deliberate and full without cramping. */
+  .manifesto {
+    padding: 100px 0 90px;
+  }
+  .pricing {
+    padding: 90px 0;
+  }
+  .contact-section {
+    padding: 80px 0 96px;
+  }
+  .article {
+    padding: 130px 0 90px;
+  }
+  .site-footer {
+    padding: 64px 0 36px;
+  }
+  .foot-nav {
+    margin-top: 44px;
+  }
 }
 
 /* Mobile phones */
@@ -1093,20 +1234,6 @@ a {
   }
   .hero-content {
     padding: 0 20px;
-  }
-  .hero {
-    min-height: 90vh;
-  }
-  .hero-cta {
-    flex-direction: column;
-    gap: 12px;
-  }
-  .hero-cta .pill {
-    text-align: center;
-    justify-content: center;
-  }
-  .scroll-hint {
-    left: 20px;
   }
   .manifesto {
     padding: 80px 0 70px;
@@ -1211,9 +1338,6 @@ a {
     flex-direction: column;
     gap: 24px;
   }
-  .foot-cta {
-    text-align: left;
-  }
   .foot-logo {
     font-size: clamp(36px, 10vw, 56px);
   }
@@ -1298,14 +1422,37 @@ a {
 }
 
 /* Footer phone link, sits under the email pill in the CTA column. */
+/* Email and phone are a matched pair of ghost pills, stacked and stretched
+   to the same width so they read as one deliberate contact block rather
+   than a button with a stray line under it. The phone carries an inline
+   SVG handset (inline SVG, not a CSS mask - masks with raw inline SVG
+   silently fail to render in several browsers) and is tinted quieter than
+   the email to keep the hierarchy: email is the primary action. */
+.foot-cta .pill.foot-email,
+.foot-cta .pill.foot-phone {
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
 .foot-phone {
-  display: inline-block;
-  margin-top: 12px;
+  margin-top: 10px;
   font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
   color: var(--muted);
-  transition: color 0.3s;
+  gap: 9px;
+}
+.foot-phone:hover {
+  color: var(--ink);
+}
+.foot-phone-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.foot-phone-number {
+  white-space: nowrap;
 }
 .foot-phone:hover {
   color: var(--gold);
@@ -1480,6 +1627,13 @@ textarea:-webkit-autofill:focus {
     align-items: center;
     gap: 24px;
   }
+  .foot-brand {
+    align-items: center;
+    width: 100%;
+  }
+  .foot-place {
+    justify-content: center;
+  }
   .foot-logo {
     font-size: clamp(32px, 10vw, 40px);
   }
@@ -1520,14 +1674,21 @@ textarea:-webkit-autofill:focus {
   .foot-cta .pill .arr {
     display: none;
   }
-  .foot-cta .pill::before {
+  .foot-cta .foot-email::before {
     content: "";
     width: 14px;
     height: 14px;
     flex-shrink: 0;
     background: currentColor;
-    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>') center / contain no-repeat;
-    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>') center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%222%22%20y%3D%224%22%20width%3D%2220%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22m2%207%2010%206%2010-6%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%222%22%20y%3D%224%22%20width%3D%2220%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22m2%207%2010%206%2010-6%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  }
+  /* Mobile: both revert to quiet left-aligned lines (no pill costume), so
+     override the desktop equal-width stretch and centring. */
+  .foot-cta .pill.foot-email,
+  .foot-cta .pill.foot-phone {
+    width: auto;
+    justify-content: flex-start;
   }
   .foot-phone {
     display: inline-flex;
@@ -1542,15 +1703,11 @@ textarea:-webkit-autofill:focus {
     border: none;
     border-radius: 0;
   }
-  .foot-phone::before {
-    content: "";
+  .foot-phone-icon {
     width: 14px;
     height: 14px;
-    flex-shrink: 0;
-    background: currentColor;
-    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>') center / contain no-repeat;
-    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>') center / contain no-repeat;
   }
+  /* (mobile phone icon is now the inline <svg> in Footer.tsx markup) */
   .foot-phone:hover {
     color: var(--gold);
   }
@@ -1601,9 +1758,112 @@ textarea:-webkit-autofill:focus {
   .section-head h2 {
     letter-spacing: -0.02em;
   }
-  /* Sub-text in the hero takes the full column on phones. */
+  /* hero-sub sizing/centering is handled in the main mobile hero block
+     above (centered composition); font-size only, here, to keep it in
+     the sitewide-rhythm block where the rest of the type-scale tweaks live. */
   .hero-sub {
-    max-width: none;
     font-size: 15px;
+  }
+}
+
+/* ---------- nav: hamburger toggle + panel (tablet + mobile) ----------
+   The toggle is hidden on desktop (>=900px, where the full link row shows)
+   and appears below it, restoring real access to Site Check, Pricing,
+   Resources and About - the CTA pill stays visible at every width since
+   it's the primary conversion action. */
+.nav-toggle {
+  display: none;
+  width: 40px;
+  height: 34px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+/* A clean two-line mark (not the three rounded bars, which read as the
+   Bumble logo). Full-width, square-cut, generous gap - an editorial menu
+   icon that morphs into an X when open. */
+.nav-toggle-bar,
+.nav-toggle-bar::before,
+.nav-toggle-bar::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 1.5px;
+  background: var(--ink);
+  border-radius: 0;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s;
+}
+/* The middle bar itself is unused now - transparent - so we get exactly two
+   lines from the ::before and ::after pseudo-elements. */
+.nav-toggle-bar {
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+}
+.nav-toggle-bar::before {
+  top: -5px;
+}
+.nav-toggle-bar::after {
+  top: 5px;
+}
+/* Open state crosses the two lines into an X centred in the button. */
+.nav-toggle-bar.open::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+.nav-toggle-bar.open::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+.nav-panel {
+  max-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid transparent;
+  background: rgba(16, 15, 13, 0.98);
+  backdrop-filter: blur(14px);
+  transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s;
+}
+.nav-panel.open {
+  max-height: 420px;
+  border-bottom-color: var(--line);
+}
+.nav-panel-links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 5vw 18px;
+}
+.nav-panel-links a {
+  padding: 15px 0;
+  font-size: 16px;
+  font-family: var(--font-display), Georgia, serif;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.nav-panel-links a:last-child {
+  border-bottom: none;
+}
+/* The primary CTA lives in the panel now, not the top bar - so tablet and
+   mobile top bars are just wordmark + menu icon, clean and uncrowded. */
+.nav-panel-cta {
+  display: flex;
+  justify-content: center;
+  margin: 0 5vw 26px;
+  padding: 15px 24px;
+}
+
+@media (max-width: 900px) {
+  .nav-toggle {
+    display: block;
+  }
+}
+@media (min-width: 900.02px) {
+  .nav-panel {
+    display: none;
   }
 }

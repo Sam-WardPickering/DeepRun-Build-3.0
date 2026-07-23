@@ -87,10 +87,14 @@ test("about page links to site check and contact", async ({ page }) => {
 });
 
 test("about page is reachable from nav", async ({ page, browserName }, testInfo) => {
-  // On mobile viewports the nav collapses to just the pill CTA; text
-  // links (including About) are hidden. The footer About link test
-  // already covers mobile reachability, so skip this one on mobile.
-  test.skip(testInfo.project.name === "mobile", "Nav links hidden on mobile - covered by footer test");
+  // Below 900px (tablet and mobile) the inline nav links are hidden behind
+  // a hamburger toggle - see interactions.spec.ts's "hamburger menu" suite
+  // for the equivalent panel-based coverage on those projects, and the
+  // footer About link test for another always-visible path.
+  test.skip(
+    testInfo.project.name === "mobile" || testInfo.project.name === "tablet",
+    "Nav links hidden behind the hamburger below 900px - covered by interactions.spec.ts and the footer test"
+  );
   await page.goto("/");
   await page.locator(".nav-links").getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/\/about/);

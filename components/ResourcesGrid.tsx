@@ -35,7 +35,6 @@ export default function ResourcesGrid() {
             >
               <div>
                 <div className="mono">
-                  <span className="dot" />
                   {a.tag}
                 </div>
                 <h3>{a.title}</h3>
@@ -53,7 +52,7 @@ export default function ResourcesGrid() {
           >
             <div>
               <div className="mono">
-                <span className="dot" />Case study
+                Case study
               </div>
               <h3>
                 Coming soon - our first client stories, told with real

@@ -44,7 +44,6 @@ export default async function ArticlePage({ params }: Props) {
               ← All resources
             </Link>
             <div className="mono">
-              <span className="dot" />
               {article.tag}
             </div>
           </div>

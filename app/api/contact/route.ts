@@ -101,6 +101,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Monitoring dry run: the health-check endpoint (app/api/monitor) proves
+  // this route's full validation path works - required fields, email
+  // format, honeypot - without ever sending a real email. It is only
+  // honoured when the caller supplies the server's own CRON_SECRET, which
+  // is never exposed to the public site, so a visitor cannot use this to
+  // silently swallow a real enquiry.
+  const cronSecret = process.env.CRON_SECRET;
+  const dryRunHeader = request.headers.get("x-monitor-dry-run");
+  if (cronSecret && dryRunHeader === cronSecret) {
+    return NextResponse.json({ ok: true, dryRun: true });
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_TO || "hello@deeprun.co.nz";
   const from = process.env.CONTACT_FROM || "Deep Run <onboarding@resend.dev>";

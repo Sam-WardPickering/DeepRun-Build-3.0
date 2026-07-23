@@ -189,7 +189,6 @@ export default function Contact() {
                     title="Click to remove"
                   >
                     <span className="mono">
-                      <span className="dot" />
                       {tier} tier
                     </span>
                     <span className="tier-remove" aria-hidden="true">

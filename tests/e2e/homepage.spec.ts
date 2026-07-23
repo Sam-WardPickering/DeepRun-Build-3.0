@@ -354,7 +354,7 @@ test.describe("footer renders coherently", () => {
     const footer = page.locator(".site-footer");
     await footer.scrollIntoViewIfNeeded();
     await expect(footer.locator(".foot-logo")).toContainText(/deep/i);
-    await expect(footer.locator(".foot-cta .pill")).toContainText(
+    await expect(footer.locator(".foot-cta .foot-email")).toContainText(
       /hello@deeprun/i
     );
     await expect(footer.locator(".foot-phone")).toContainText(/020 4134/);
