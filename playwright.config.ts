@@ -30,8 +30,21 @@ export default defineConfig({
     baseURL: "http://localhost:3100",
     trace: "on-first-retry",
   },
+  /**
+   * Each project sends a distinct client IP. Both API routes rate-limit per
+   * IP from an in-memory store, so without this the three device projects
+   * share one bucket and saturate it - producing 429s in tests that assert
+   * 400s. This isolates them; specs that need finer isolation set their own
+   * header per test.
+   */
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "desktop",
+      use: {
+        ...devices["Desktop Chrome"],
+        extraHTTPHeaders: { "x-forwarded-for": "198.51.100.11" },
+      },
+    },
     // iPad Mini's viewport/touch profile (768x1024, a genuinely common real
     // tablet size) with the engine forced to Chromium - Playwright's iOS
     // device presets default to WebKit, which isn't installed here or
@@ -39,9 +52,19 @@ export default defineConfig({
     // three projects.
     {
       name: "tablet",
-      use: { ...devices["iPad Mini"], defaultBrowserType: "chromium" },
+      use: {
+        ...devices["iPad Mini"],
+        defaultBrowserType: "chromium",
+        extraHTTPHeaders: { "x-forwarded-for": "198.51.100.12" },
+      },
     },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    {
+      name: "mobile",
+      use: {
+        ...devices["Pixel 7"],
+        extraHTTPHeaders: { "x-forwarded-for": "198.51.100.13" },
+      },
+    },
   ],
   webServer: {
     command: "npm run build && npm run start -- -p 3100",

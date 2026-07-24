@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { isolatedHeaders } from "./helpers/rate-limit-isolation";
 
 /**
  * Tests for the /api/contact endpoint and the form's behaviour against it.
@@ -9,7 +10,7 @@ import { test, expect } from "@playwright/test";
 const API = "/api/contact";
 
 test.describe("contact API validation", () => {
-  test("missing required fields returns 400", async ({ request }) => {
+  test("missing required fields returns 400", async ({ request }, testInfo) => {
     const res = await request.post(API, { data: { name: "", email: "", message: "" } });
     expect(res.status()).toBe(400);
     const body = await res.json();
@@ -17,7 +18,7 @@ test.describe("contact API validation", () => {
     expect(body.error).toBeTruthy();
   });
 
-  test("invalid email is rejected", async ({ request }) => {
+  test("invalid email is rejected", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       data: { name: "Jane", email: "not-an-email", message: "Hello there" },
     });
@@ -26,7 +27,7 @@ test.describe("contact API validation", () => {
     expect(body.error).toMatch(/email/i);
   });
 
-  test("invalid JSON body returns 400", async ({ request }) => {
+  test("invalid JSON body returns 400", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       headers: { "Content-Type": "application/json" },
       data: "this is not json",
@@ -34,7 +35,7 @@ test.describe("contact API validation", () => {
     expect(res.status()).toBe(400);
   });
 
-  test("honeypot field causes silent accept (bot drop)", async ({ request }) => {
+  test("honeypot field causes silent accept (bot drop)", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       data: {
         name: "Bot",
@@ -49,12 +50,12 @@ test.describe("contact API validation", () => {
     expect(body.ok).toBe(true);
   });
 
-  test("GET method is not allowed", async ({ request }) => {
+  test("GET method is not allowed", async ({ request }, testInfo) => {
     const res = await request.get(API);
     expect(res.status()).toBe(405);
   });
 
-  test("without email configured, returns fallback flag", async ({ request }) => {
+  test("without email configured, returns fallback flag", async ({ request }, testInfo) => {
     // In test/dev there's no RESEND_API_KEY, so a valid submission should
     // come back with fallback:true (the client then uses mailto).
     const res = await request.post(API, {
@@ -69,7 +70,7 @@ test.describe("contact API validation", () => {
     expect(body.ok === true || body.fallback === true).toBe(true);
   });
 
-  test("oversized fields are accepted but truncated, never crash", async ({ request }) => {
+  test("oversized fields are accepted but truncated, never crash", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       data: {
         name: "A".repeat(5000),
@@ -81,7 +82,7 @@ test.describe("contact API validation", () => {
     expect(res.status()).toBeLessThan(500);
   });
 
-  test("header-injection attempt in fields does not error", async ({ request }) => {
+  test("header-injection attempt in fields does not error", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       data: {
         name: "Jane\r\nBcc: victim@example.com",
@@ -95,7 +96,7 @@ test.describe("contact API validation", () => {
 });
 
 test.describe("contact form UI", () => {
-  test("successful send shows the confirmation state", async ({ page }) => {
+  test("successful send shows the confirmation state", async ({ page }, testInfo) => {
     // Mock the API so we control the response regardless of email config.
     await page.route("**/api/contact", (route) =>
       route.fulfill({
@@ -113,7 +114,7 @@ test.describe("contact form UI", () => {
     await expect(page.locator(".form-success")).toContainText(/we'll be in touch/i);
   });
 
-  test("server error shows an inline error, not the success state", async ({ page }) => {
+  test("server error shows an inline error, not the success state", async ({ page }, testInfo) => {
     await page.route("**/api/contact", (route) =>
       route.fulfill({
         status: 502,
@@ -130,7 +131,7 @@ test.describe("contact form UI", () => {
     await expect(page.locator(".form-success")).toHaveCount(0);
   });
 
-  test("honeypot field is present but visually hidden", async ({ page }) => {
+  test("honeypot field is present but visually hidden", async ({ page }, testInfo) => {
     await page.goto("/#contact");
     const hp = page.locator("#c-website");
     await expect(hp).toHaveCount(1);

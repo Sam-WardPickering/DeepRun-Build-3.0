@@ -73,7 +73,16 @@ export default function Nav() {
       >
         <div className="nav-panel-links">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} onClick={() => setOpen(false)}>
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              /* Explicitly untabbable while closed. CSS visibility already
+                 removes these from the tab order; this guarantees it even if
+                 the styling changes, so a keyboard user can never land on a
+                 hidden link (axe: aria-hidden-focus). */
+              tabIndex={open ? undefined : -1}
+            >
               {l.label}
             </Link>
           ))}
@@ -82,6 +91,7 @@ export default function Nav() {
           href="/#contact"
           className="pill gold nav-panel-cta"
           onClick={() => setOpen(false)}
+          tabIndex={open ? undefined : -1}
         >
           Start a project <span className="arr">→</span>
         </Link>

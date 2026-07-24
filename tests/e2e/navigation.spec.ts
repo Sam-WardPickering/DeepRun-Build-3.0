@@ -105,21 +105,26 @@ test("404 page returns for invalid routes", async ({ page }) => {
   const response = await page.goto("/this-page-does-not-exist");
   expect(response?.status()).toBe(404);
 });
-test.describe("back-link does not jam with mono label (regression)", () => {
-  test("resources article: back-link and RESOURCE label are on separate lines", async ({ page }) => {
+test.describe("back-link does not jam with the tag (regression)", () => {
+  test("resources article: back-link and tag share a row with real space between them", async ({ page }) => {
     // Visit a resource article (the slug page where the jam appeared).
     await page.goto("/resources");
     const firstCard = page.locator("a[href^='/resources/']").first();
     await firstCard.click();
     await page.waitForURL(/\/resources\/.+/);
     const back = page.locator(".back-link");
-    const mono = page.locator(".article .mono").first();
+    const mono = page.locator(".article-topbar .mono").first();
     const backBox = await back.boundingBox();
     const monoBox = await mono.boundingBox();
     expect(backBox).not.toBeNull();
     expect(monoBox).not.toBeNull();
-    // The mono label must sit BELOW the back-link, not beside it. Its top
-    // should be at least a line lower than the back-link's top.
-    expect(monoBox!.y).toBeGreaterThan(backBox!.y + 8);
+    // The header is deliberately one aligned row now (back-link, divider,
+    // tag) rather than a two-line stack. The original bug was the two
+    // running together with no separation, so assert a genuine horizontal
+    // gap between the end of the link and the start of the tag.
+    const gap = monoBox!.x - (backBox!.x + backBox!.width);
+    expect(gap).toBeGreaterThan(8);
+    // And they sit on the same line.
+    expect(Math.abs(monoBox!.y - backBox!.y)).toBeLessThan(12);
   });
 });

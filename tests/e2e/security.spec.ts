@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { isolatedHeaders } from "./helpers/rate-limit-isolation";
 
 /**
  * Security-focused tests for the audit API route.
@@ -27,8 +28,9 @@ test.describe("SSRF protection", () => {
   ];
 
   for (const addr of privateAddresses) {
-    test(`blocks private address: ${addr}`, async ({ request }) => {
+    test(`blocks private address: ${addr}`, async ({ request }, testInfo) => {
       const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
         data: { url: addr },
       });
       expect(res.status()).toBe(400);
@@ -40,42 +42,49 @@ test.describe("SSRF protection", () => {
     });
   }
 
-  test("blocks file:// protocol", async ({ request }) => {
+  test("blocks file:// protocol", async ({ request }, testInfo) => {
     const res = await request.post(API, {
-      data: { url: "file:///etc/passwd" },
+        headers: isolatedHeaders(testInfo),
+        data: { url: "file:///etc/passwd" },
     });
     expect(res.ok()).toBe(false);
   });
 
-  test("blocks ftp:// protocol", async ({ request }) => {
+  test("blocks ftp:// protocol", async ({ request }, testInfo) => {
     const res = await request.post(API, {
-      data: { url: "ftp://example.com" },
+        headers: isolatedHeaders(testInfo),
+        data: { url: "ftp://example.com" },
     });
     expect(res.ok()).toBe(false);
   });
 
-  test("blocks javascript: protocol", async ({ request }) => {
+  test("blocks javascript: protocol", async ({ request }, testInfo) => {
     const res = await request.post(API, {
-      data: { url: "javascript:alert(1)" },
+        headers: isolatedHeaders(testInfo),
+        data: { url: "javascript:alert(1)" },
     });
     expect(res.ok()).toBe(false);
   });
 });
 
 test.describe("input validation", () => {
-  test("empty URL returns 400", async ({ request }) => {
-    const res = await request.post(API, { data: { url: "" } });
+  test("empty URL returns 400", async ({ request }, testInfo) => {
+    const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: "" } });
     expect(res.status()).toBe(400);
     const body = await res.json();
     expect(body.error).toBeTruthy();
   });
 
-  test("missing URL field returns 400", async ({ request }) => {
-    const res = await request.post(API, { data: {} });
+  test("missing URL field returns 400", async ({ request }, testInfo) => {
+    const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: {} });
     expect(res.status()).toBe(400);
   });
 
-  test("invalid JSON body returns 400", async ({ request }) => {
+  test("invalid JSON body returns 400", async ({ request }, testInfo) => {
     const res = await request.post(API, {
       headers: { "Content-Type": "application/json" },
       data: "not json at all",
@@ -83,14 +92,16 @@ test.describe("input validation", () => {
     expect(res.status()).toBe(400);
   });
 
-  test("extremely long URL is handled gracefully", async ({ request }) => {
+  test("extremely long URL is handled gracefully", async ({ request }, testInfo) => {
     const longUrl = "https://example.com/" + "a".repeat(5000);
-    const res = await request.post(API, { data: { url: longUrl } });
+    const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: longUrl } });
     // Should either return an error or handle it - never crash
     expect([400, 502]).toContain(res.status());
   });
 
-  test("URL with SQL injection patterns is handled safely", async ({ request }) => {
+  test("URL with SQL injection patterns is handled safely", async ({ request }, testInfo) => {
     const injections = [
       "'; DROP TABLE users; --",
       "1 OR 1=1",
@@ -99,6 +110,7 @@ test.describe("input validation", () => {
     ];
     for (const payload of injections) {
       const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
         data: { url: payload },
       });
       // Should return a validation error, never crash
@@ -106,9 +118,10 @@ test.describe("input validation", () => {
     }
   });
 
-  test("URL with XSS payload in response does not echo raw HTML", async ({ request }) => {
+  test("URL with XSS payload in response does not echo raw HTML", async ({ request }, testInfo) => {
     const res = await request.post(API, {
-      data: { url: '<img src=x onerror=alert(1)>' },
+        headers: isolatedHeaders(testInfo),
+        data: { url: '<img src=x onerror=alert(1)>' },
     });
     const body = await res.json();
     // The error message should not echo the raw input back
@@ -120,7 +133,7 @@ test.describe("input validation", () => {
 });
 
 test.describe("API response shape", () => {
-  test("successful response has expected fields", async ({ request, page }) => {
+  test("successful response has expected fields", async ({ request, page }, testInfo) => {
     // Mock at the page level to intercept
     await page.goto("/");
     await page.route("**/api/audit", (route) =>
@@ -145,21 +158,24 @@ test.describe("API response shape", () => {
     );
     // Verify through direct API call shape
     const directRes = await request.post(API, {
-      data: { url: "localhost" }, // will be blocked but validates parsing
+        headers: isolatedHeaders(testInfo),
+        data: { url: "localhost" }, // will be blocked but validates parsing
     });
     const body = await directRes.json();
     // Should have an error field (since localhost is blocked)
     expect(body).toHaveProperty("error");
   });
 
-  test("error responses are JSON, not HTML error pages", async ({ request }) => {
-    const res = await request.post(API, { data: { url: "" } });
+  test("error responses are JSON, not HTML error pages", async ({ request }, testInfo) => {
+    const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: "" } });
     const contentType = res.headers()["content-type"] || "";
     expect(contentType).toContain("application/json");
   });
 
-  test("GET method returns 405 or appropriate error", async ({ request }) => {
-    const res = await request.get(API);
+  test("GET method returns 405 or appropriate error", async ({ request }, testInfo) => {
+    const res = await request.get(API, { headers: isolatedHeaders(testInfo) });
     // Next.js API routes return 405 for unsupported methods
     expect(res.status()).toBeGreaterThanOrEqual(400);
   });
@@ -176,25 +192,30 @@ test.describe("SSRF redirect and expanded host protection", () => {
     "0.0.0.0:80",
   ];
   for (const addr of extraPrivate) {
-    test(`blocks expanded private range: ${addr}`, async ({ request }) => {
-      const res = await request.post(API, { data: { url: addr } });
+    test(`blocks expanded private range: ${addr}`, async ({ request }, testInfo) => {
+      const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: addr } });
       const body = await res.json();
       expect(body.error).toBeTruthy();
     });
   }
 
-  test("URL over max length is rejected", async ({ request }) => {
+  test("URL over max length is rejected", async ({ request }, testInfo) => {
     const res = await request.post(API, {
-      data: { url: "https://example.com/" + "a".repeat(3000) },
+        headers: isolatedHeaders(testInfo),
+        data: { url: "https://example.com/" + "a".repeat(3000) },
     });
     expect(res.status()).toBe(400);
   });
 
-  test("audit rate limit eventually returns 429", async ({ request }) => {
+  test("audit rate limit eventually returns 429", async ({ request }, testInfo) => {
     // Fire many quick requests; the in-memory limiter should trip.
     let got429 = false;
     for (let i = 0; i < 20; i++) {
-      const res = await request.post(API, { data: { url: "localhost" } });
+      const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: "localhost" } });
       if (res.status() === 429) {
         got429 = true;
         break;
@@ -206,20 +227,22 @@ test.describe("SSRF redirect and expanded host protection", () => {
     expect(typeof got429).toBe("boolean");
   });
 
-  test("successful audit response carries hardening headers", async ({ request, page }) => {
+  test("successful audit response carries hardening headers", async ({ request, page }, testInfo) => {
     // Use a mocked page-level request isn't possible for headers; hit the
     // route for an error case and confirm no-store on error is not required,
     // but nosniff should be present on success. We can't reach a real site
     // here, so assert the error path returns JSON (covered) and skip headers
     // when unreachable.
-    const res = await request.post(API, { data: { url: "localhost" } });
+    const res = await request.post(API, {
+        headers: isolatedHeaders(testInfo),
+        data: { url: "localhost" } });
     // localhost blocked -> JSON error; content-type must be JSON.
     expect((res.headers()["content-type"] || "")).toContain("application/json");
   });
 });
 
 test.describe("site-wide security headers", () => {
-  test("homepage sends security headers", async ({ request }) => {
+  test("homepage sends security headers", async ({ request }, testInfo) => {
     const res = await request.get("/");
     const h = res.headers();
     expect(h["x-content-type-options"]).toBe("nosniff");

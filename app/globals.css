@@ -818,7 +818,9 @@ a {
 }
 .foot-logo {
   font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(44px, 6vw, 88px);
+  /* Trimmed ~7% from the previous clamp: the wordmark still leads the
+     composition but no longer overpowers the nav and CTA beneath it. */
+  font-size: clamp(42px, 5.6vw, 82px);
   font-weight: 460;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -831,6 +833,9 @@ a {
   text-align: right;
   display: flex;
   flex-direction: column;
+  /* A floor on the column's width so the CTA block holds its own against
+     the wordmark instead of collapsing to the pills' text width. */
+  min-width: 330px;
   /* Default stretch: both pills fill the column, whose width is set by the
      widest content (the email). That gives an equal-width, tidy stack with
      no hard-coded dimensions. */
@@ -838,18 +843,22 @@ a {
 }
 .foot-cta-line {
   font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(18px, 2vw, 24px);
+  /* Enlarged so the right column reads as an intentional counterweight to
+     the wordmark rather than a secondary note. */
+  font-size: clamp(20px, 2.5vw, 30px);
   font-weight: 460;
-  letter-spacing: -0.01em;
-  margin-bottom: 18px;
+  letter-spacing: -0.015em;
+  margin-bottom: 22px;
 }
 /* Nav now sits inside the brand block, so it drops its old full-width rule
    and instead reads as a compact link group under the wordmark. */
 .foot-nav {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 30px;
-  row-gap: 12px;
+  /* Roughly 20% more space between items - navigation of this weight wants
+     room to breathe rather than sitting tight. */
+  column-gap: 36px;
+  row-gap: 14px;
   margin-top: 34px;
 }
 .foot-nav a {
@@ -865,15 +874,23 @@ a {
 }
 .foot-bottom {
   border-top: 1px solid var(--line);
-  padding-top: 24px;
+  /* Less space above the rule, more below it: the divider now reads as
+     closing the main footer rather than belonging to the legal line. */
+  padding-top: 28px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: 20px;
   flex-wrap: wrap;
-  margin-top: 32px;
+  margin-top: 20px;
   color: var(--muted);
   font-size: 12px;
+}
+/* (5) The tagline was so quiet it risked reading as accidental. A touch
+   more presence than the copyright line makes it deliberate, and baseline
+   alignment above keeps the two optically level. */
+.foot-bottom span:last-child {
+  color: #a9a294;
 }
 .foot-bottom a {
   color: var(--muted);
@@ -1434,24 +1451,36 @@ a {
   justify-content: center;
   white-space: nowrap;
 }
+/* Email and phone are a matched pair: same mono voice, same icon size, no
+   arrow on either. The email keeps a fractionally brighter value so there
+   is still a primary, but they read as two contact details of equal
+   standing rather than a button plus an afterthought. */
+.foot-email,
 .foot-phone {
-  margin-top: 10px;
   font-family: var(--font-mono), monospace;
   font-size: 12.5px;
   font-weight: 400;
   letter-spacing: 0.06em;
-  color: var(--muted);
-  gap: 9px;
+  gap: 10px;
 }
-.foot-phone:hover {
+.foot-email {
   color: var(--ink);
 }
-.foot-phone-icon {
+.foot-phone {
+  margin-top: 12px;
+  color: var(--muted);
+}
+.foot-email:hover,
+.foot-phone:hover {
+  color: var(--gold);
+}
+.foot-contact-icon {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+  color: var(--gold);
 }
-.foot-phone-number {
+.foot-contact-value {
   white-space: nowrap;
 }
 .foot-phone:hover {
@@ -1640,6 +1669,7 @@ textarea:-webkit-autofill:focus {
   .foot-cta {
     text-align: center;
     width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1647,11 +1677,8 @@ textarea:-webkit-autofill:focus {
   .foot-cta-line {
     display: none;
   }
-  /* Email and phone: two matched quiet lines, same mono voice, each with
-     a small icon sized to the text (14px against 13px type). The email
-     drops its pill costume entirely on mobile - two equal contact lines
-     read balanced; a button over a text line never did. Icons are
-     CSS masks so they inherit the text colour, including hover. */
+  /* Email and phone drop their pill costume on mobile and become two
+     matched quiet lines, each led by its inline SVG icon. */
   .foot-cta .pill {
     width: auto;
     background: none;
@@ -1670,18 +1697,6 @@ textarea:-webkit-autofill:focus {
   .foot-cta .pill:hover {
     background: none;
     color: var(--gold);
-  }
-  .foot-cta .pill .arr {
-    display: none;
-  }
-  .foot-cta .foot-email::before {
-    content: "";
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-    background: currentColor;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%222%22%20y%3D%224%22%20width%3D%2220%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22m2%207%2010%206%2010-6%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%222%22%20y%3D%224%22%20width%3D%2220%22%20height%3D%2216%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22m2%207%2010%206%2010-6%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
   }
   /* Mobile: both revert to quiet left-aligned lines (no pill costume), so
      override the desktop equal-width stretch and centring. */
@@ -1826,10 +1841,20 @@ textarea:-webkit-autofill:focus {
   border-bottom: 1px solid transparent;
   background: rgba(16, 15, 13, 0.98);
   backdrop-filter: blur(14px);
+  /* visibility:hidden (not just max-height:0) is what actually removes the
+     panel's links from the tab order and the accessibility tree. Without it
+     the links stayed focusable inside an aria-hidden container, which is a
+     serious WCAG failure (axe: aria-hidden-focus) - a sighted keyboard user
+     would tab into invisible links. Visibility is delayed to the end of the
+     close transition so the panel can still animate out. */
+  visibility: hidden;
   transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.35s;
+    border-color 0.35s, visibility 0s linear 0.35s;
 }
 .nav-panel.open {
+  visibility: visible;
+  transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s, visibility 0s linear 0s;
   max-height: 420px;
   border-bottom-color: var(--line);
 }

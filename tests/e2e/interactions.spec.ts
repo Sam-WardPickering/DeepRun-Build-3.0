@@ -126,6 +126,39 @@ test.describe("hamburger menu (tablet + mobile only)", () => {
     await expect(page.locator(".nav-panel")).not.toHaveClass(/open/);
   });
 
+  test("closed panel links are not reachable by keyboard (aria-hidden-focus regression)", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "desktop", "panel only exists below 900px");
+    await page.goto("/");
+    const panel = page.locator(".nav-panel");
+    await expect(panel).not.toHaveClass(/open/);
+    // The panel is aria-hidden while closed, so nothing inside it may be
+    // focusable - otherwise a keyboard user tabs into invisible links (axe:
+    // aria-hidden-focus, a serious WCAG 4.1.2 failure). Guarded two ways:
+    // every link is explicitly untabbable, and the panel is visibility:hidden.
+    const tabIndexes = await panel
+      .locator("a")
+      .evaluateAll((els) => els.map((e) => e.getAttribute("tabindex")));
+    expect(tabIndexes.length).toBeGreaterThan(0);
+    for (const t of tabIndexes) expect(t).toBe("-1");
+    const visibility = await panel.evaluate(
+      (el) => getComputedStyle(el).visibility
+    );
+    expect(visibility).toBe("hidden");
+  });
+
+  test("opening the panel restores keyboard access to its links", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "desktop", "panel only exists below 900px");
+    await page.goto("/");
+    await page.locator(".nav-toggle").click();
+    const panel = page.locator(".nav-panel");
+    await expect(panel).toHaveClass(/open/);
+    await expect(panel).toHaveCSS("visibility", "visible");
+    const tabIndexes = await panel
+      .locator("a")
+      .evaluateAll((els) => els.map((e) => e.getAttribute("tabindex")));
+    for (const t of tabIndexes) expect(t).toBeNull();
+  });
+
   test("desktop shows the full link row directly, with no hamburger toggle", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "desktop-only assertion");
     await page.goto("/");
@@ -264,36 +297,42 @@ test.describe("footer: every link responds or targets correctly", () => {
 
   test("Site Check footer link scrolls to the audit module", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "Site Check" }).click();
     await expect(page.locator("#audit")).toBeInViewport();
   });
 
   test("Pricing footer link scrolls to pricing", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "Pricing" }).click();
     await expect(page.locator("#pricing")).toBeInViewport();
   });
 
   test("Resources footer link navigates to the index", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "Resources" }).click();
     await expect(page).toHaveURL(/\/resources$/);
   });
 
   test("Contact footer link scrolls to contact", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "Contact" }).click();
     await expect(page.locator("#contact")).toBeInViewport();
   });
 
   test("About footer link navigates to about", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "About" }).click();
     await expect(page).toHaveURL(/\/about$/);
   });
 
   test("Privacy footer link navigates to privacy", async ({ page }) => {
     await page.goto("/");
+    await page.locator(".foot-nav").scrollIntoViewIfNeeded();
     await page.locator(".foot-nav").getByRole("link", { name: "Privacy" }).click();
     await expect(page).toHaveURL(/\/privacy$/);
   });
@@ -351,15 +390,29 @@ test.describe("mobile layout", () => {
   test("checker input and button stack full-width on small screens", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "mobile project only");
     await page.goto("/#audit");
-    const input = page.getByLabel("Your website address");
-    const btn = page.getByRole("button", { name: /check my site/i });
-    const ib = await input.boundingBox();
-    const bb = await btn.boundingBox();
-    expect(ib).not.toBeNull();
-    expect(bb).not.toBeNull();
-    // Stacked: button sits below the input, and both span nearly the full card.
-    expect(bb!.y).toBeGreaterThan(ib!.y + ib!.height - 2);
-    expect(Math.abs(ib!.width - bb!.width)).toBeLessThan(30);
+    await page.locator(".audit-input").scrollIntoViewIfNeeded();
+    // Both rects are read inside a single evaluate so nothing can scroll
+    // between the two measurements (which previously made them incomparable).
+    const rects = await page.evaluate(() => {
+      const wrap = document.querySelector(".audit-input");
+      const input = wrap?.querySelector("input");
+      const btn = wrap?.querySelector("button");
+      if (!input || !btn) return null;
+      const i = input.getBoundingClientRect();
+      const b = btn.getBoundingClientRect();
+      return {
+        inputTop: i.top,
+        inputBottom: i.bottom,
+        inputWidth: i.width,
+        btnTop: b.top,
+        btnWidth: b.width,
+      };
+    });
+    expect(rects).not.toBeNull();
+    // Stacked: the button starts at or below the input's bottom edge.
+    expect(rects!.btnTop).toBeGreaterThanOrEqual(rects!.inputBottom - 2);
+    // And both span nearly the full card width.
+    expect(Math.abs(rects!.inputWidth - rects!.btnWidth)).toBeLessThan(30);
   });
 
   test("footer email and phone are matched quiet text lines on mobile", async ({ page }, testInfo) => {
@@ -380,13 +433,11 @@ test.describe("mobile layout", () => {
     });
     // Same type size = balanced pair.
     expect(emailStyle.size).toBe(phoneStyle.size);
-    // The email carries its icon via a ::before mask box; the phone now
-    // carries an inline SVG in markup (more robust than a mask).
-    const emailIconW = await page
-      .locator(".foot-cta a.foot-email")
-      .evaluate((el) => getComputedStyle(el, "::before").width);
-    expect(emailIconW).toBe("14px");
-    await expect(page.locator(".foot-phone svg.foot-phone-icon")).toBeVisible();
+    // Both now carry an inline SVG icon from the markup (the email's old
+    // CSS-mask ::before is gone - masks with raw inline SVG were silently
+    // failing to render).
+    await expect(page.locator(".foot-email svg.foot-contact-icon")).toBeVisible();
+    await expect(page.locator(".foot-phone svg.foot-contact-icon")).toBeVisible();
   });
 
   test("desktop footer email and phone are a matched, equal-width pill pair", async ({ page }, testInfo) => {
@@ -399,7 +450,13 @@ test.describe("mobile layout", () => {
     await expect(phone).toHaveAttribute("href", "tel:+642041343263");
     // Carries an inline SVG handset icon (rendered from markup, not a CSS
     // mask - masks with raw inline SVG were silently failing to render).
-    await expect(phone.locator("svg.foot-phone-icon")).toBeVisible();
+    await expect(phone.locator("svg.foot-contact-icon")).toBeVisible();
+    // The email now carries a matching envelope icon and neither has an
+    // arrow, so they read as two contact details of equal standing rather
+    // than a CTA button plus a leftover line.
+    await expect(email.locator("svg.foot-contact-icon")).toBeVisible();
+    await expect(email.locator(".arr")).toHaveCount(0);
+    await expect(phone.locator(".arr")).toHaveCount(0);
     // Both are pills - the phone matches the email's shape language rather
     // than hanging beneath it as bare text.
     for (const el of [email, phone]) {

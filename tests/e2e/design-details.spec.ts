@@ -107,6 +107,57 @@ test.describe("footer composition", () => {
     );
     expect(parseFloat(border)).toBeGreaterThan(0);
   });
+
+  test("the CTA column holds real width so the composition isn't left-heavy", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop composition");
+    await page.goto("/");
+    const cta = page.locator(".foot-cta");
+    await cta.scrollIntoViewIfNeeded();
+    const box = await cta.boundingBox();
+    expect(box).not.toBeNull();
+    // The right column previously collapsed to its pills' text width, which
+    // left the wordmark dominating. It now holds a deliberate minimum.
+    expect(box!.width).toBeGreaterThanOrEqual(320);
+  });
+
+  test("the CTA heading is a genuine counterweight, not a footnote", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop type scale");
+    await page.goto("/");
+    const line = page.locator(".foot-cta-line");
+    await line.scrollIntoViewIfNeeded();
+    const size = await line.evaluate((el) =>
+      parseFloat(getComputedStyle(el).fontSize)
+    );
+    expect(size).toBeGreaterThanOrEqual(24);
+  });
+
+  test("nav items have room to breathe", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "desktop spacing");
+    await page.goto("/");
+    const nav = page.locator(".foot-nav");
+    await nav.scrollIntoViewIfNeeded();
+    const gap = await nav.evaluate((el) =>
+      parseFloat(getComputedStyle(el).columnGap)
+    );
+    expect(gap).toBeGreaterThanOrEqual(34);
+  });
+
+  test("the closing tagline is legible, not accidental-looking", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "tagline is desktop-only");
+    await page.goto("/");
+    const tagline = page.locator(".foot-bottom span").last();
+    await tagline.scrollIntoViewIfNeeded();
+    await expect(tagline).toContainText(/fixed-price/i);
+    // It should read a touch brighter than the copyright line beside it.
+    const [tagColour, copyColour] = await Promise.all([
+      tagline.evaluate((el) => getComputedStyle(el).color),
+      page
+        .locator(".foot-bottom span")
+        .first()
+        .evaluate((el) => getComputedStyle(el).color),
+    ]);
+    expect(tagColour).not.toBe(copyColour);
+  });
 });
 
 // ---------------- Contact card alignment ----------------

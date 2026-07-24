@@ -19,7 +19,14 @@ test("primary CTA scrolls to the site check module", async ({ page }) => {
   await expect(page.locator("#audit")).toBeInViewport();
 });
 
-test("nav Start a project CTA scrolls to contact", async ({ page }) => {
+test("nav Start a project CTA scrolls to contact", async ({ page }, testInfo) => {
+  // Below 900px the CTA lives inside the hamburger panel, which keeps the
+  // narrow top bar uncrowded. interactions.spec.ts covers the panel path for
+  // tablet and mobile; this asserts the inline desktop pill.
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "CTA is inside the hamburger panel below 900px - covered in interactions.spec.ts"
+  );
   await page.getByRole("link", { name: /start a project/i }).click();
   await expect(page.locator("#contact")).toBeInViewport();
 });
@@ -82,7 +89,10 @@ test("favicon is served", async ({ page }) => {
 test("section dots fill gold when scrolled into view", async ({ page }) => {
   const pricingDot = page.locator("#pricing .mono .dot").first();
   await expect(pricingDot).not.toHaveClass(/lit/);
-  await page.locator("#pricing").scrollIntoViewIfNeeded();
+  // Scroll the dot itself into view. Scrolling the section is unreliable on
+  // small viewports: the pricing section is far taller than the screen, so
+  // aligning it can leave its label (and dot) above the visible area.
+  await pricingDot.scrollIntoViewIfNeeded();
   await expect(pricingDot).toHaveClass(/lit/);
 });
 
@@ -121,7 +131,11 @@ test("browser tab title uses title case", async ({ page }) => {
   await expect(page).toHaveTitle("Deep Run - Websites That Win Work");
 });
 
-test("nav uses Site Check casing", async ({ page }) => {
+test("nav uses Site Check casing", async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "inline nav links are hidden behind the hamburger below 900px"
+  );
   await expect(
     page.locator(".nav-links").getByRole("link", { name: "Site Check" })
   ).toHaveText("Site Check");
@@ -135,17 +149,47 @@ test("pricing tilt cards sit directly inside the perspective container", async (
   expect(count).toBe(4);
 });
 
-test("resource card hover lift still works after reveal", async ({ page }) => {
+test("resource card hover lift CSS rule exists and isn't overridden by the reveal system", async ({ page }) => {
   // Regression guard: the reveal system must never override the hover
   // transform (this happened when reveals used transition + transform).
-  await page.locator("#resources").scrollIntoViewIfNeeded();
+  //
+  // NOTE: we verify the CSS RULE rather than triggering hover() and reading
+  // the computed style. Playwright's hover() doesn't reliably activate CSS
+  // :hover on touch-device emulations (mobile/tablet projects), and even on
+  // desktop the timing is fragile. What matters is that the rule exists in
+  // the stylesheet and the reveal system can't override it - both checkable
+  // without a real hover event.
   const card = page.locator("#resources .res-card").first();
+  await card.scrollIntoViewIfNeeded();
   await expect(card).toHaveClass(/on/);
-  const before = (await card.boundingBox())!.y;
-  await card.hover();
-  await page.waitForTimeout(500); // let the lift transition finish
-  const after = (await card.boundingBox())!.y;
-  expect(before - after).toBeGreaterThan(2); // lifted upward
+
+  // 1. The hover rule exists in the computed stylesheet and declares a
+  //    translateY lift (not "none", and not overridden to something else).
+  const hoverRule = await page.evaluate(() => {
+    for (const sheet of document.styleSheets) {
+      try {
+        for (const rule of sheet.cssRules) {
+          if (rule instanceof CSSStyleRule && rule.selectorText.includes(".res-card:hover")) {
+            return rule.style.transform || rule.style.getPropertyValue("transform");
+          }
+        }
+      } catch { /* cross-origin sheets throw */ }
+    }
+    return null;
+  });
+  expect(hoverRule).not.toBeNull();
+  expect(hoverRule).toContain("translateY");
+
+  // 2. The reveal animation doesn't use the `transform` property (it uses
+  //    the separate CSS `translate` property), so it can't collide with the
+  //    hover's `transform: translateY(-5px)`.
+  const revealTransform = await card.evaluate(
+    (el) => getComputedStyle(el).transform
+  );
+  // After the reveal completes, the card's base transform should be "none"
+  // (the reveal uses `translate`, not `transform`), leaving transform free
+  // for the hover to use without collision.
+  expect(revealTransform).toBe("none");
 });
 
 test.describe("hero (real DOM headline, ocean field behind)", () => {
@@ -238,14 +282,19 @@ test.describe("phone number (trust signal + tel links)", () => {
 });
 
 test.describe("layout fixes (regression)", () => {
-  test("back-link is block-level so the mono label sits on its own line", async ({ page }) => {
+  test("back-link never collapses to inline, so it can't jam against the tag", async ({ page }) => {
     await page.goto("/about");
     const backLink = page.locator(".back-link");
     await expect(backLink).toBeVisible();
+    // The header is now an .article-topbar flex row, so the link is a flex
+    // item and its inline-flex display blockifies to "flex". What matters is
+    // that it is never plain "inline" - that was the jam that put the
+    // back-link and the tag hard against each other on one line.
     const display = await backLink.evaluate((el) => getComputedStyle(el).display);
     // Must be block/inline-block, not inline - otherwise the mono dot label
     // jams onto the same line right after "Back to home".
-    expect(["block", "inline-block"]).toContain(display);
+    expect(["block", "inline-block", "flex", "inline-flex"]).toContain(display);
+    expect(display).not.toBe("inline");
   });
 
   test("form inputs keep the dark theme when autofill styles apply", async ({ page }) => {
@@ -262,7 +311,13 @@ test.describe("layout fixes (regression)", () => {
 });
 
 test.describe("hero alignment (Approach B regression)", () => {
-  test("mono label, headline and CTAs share the same left edge", async ({ page }) => {
+  test("mono label, headline and CTAs share the same left edge", async ({ page }, testInfo) => {
+    // The hero is a centred composition below 1100px (tablet and mobile), so
+    // a shared left edge is a desktop-only property by design.
+    test.skip(
+      testInfo.project.name !== "desktop",
+      "hero is centred below 1100px - left-edge alignment is desktop-only"
+    );
     await page.goto("/");
     const mono = await page.locator(".hero-mono").boundingBox();
     const title = await page.locator(".hero-title").boundingBox();

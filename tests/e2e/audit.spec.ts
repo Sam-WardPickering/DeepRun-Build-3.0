@@ -1,8 +1,17 @@
 import { test, expect } from "@playwright/test";
+import { isolatePage } from "./helpers/rate-limit-isolation";
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }, testInfo) => {
+  // Each test drives real requests through the audit route, which is
+  // rate-limited per IP. Give every test its own synthetic client IP so the
+  // validation cases can't exhaust a shared bucket and get 429s.
+  await isolatePage(page, testInfo);
   await page.goto("/");
   await page.locator("#audit").scrollIntoViewIfNeeded();
+  // The fixed nav bar (~60px) can overlap the audit card's top controls on
+  // short/narrow viewports. Scroll an extra 80px past the section head so
+  // the input and button clear the nav.
+  await page.evaluate(() => window.scrollBy(0, 80));
 });
 
 test("example scores animate in when scrolled into view", async ({ page }) => {
@@ -104,8 +113,17 @@ test("successful check renders scores, findings and contact nudge", async ({
 
   await page.goto("/");
   await page.locator("#audit").scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 80));
   await page.getByLabel("Your website address").fill("example.co.nz");
-  await page.getByRole("button", { name: /check my site/i }).click();
+  // On tablet the single-column card is tall enough that the button can sit
+  // below the visible area after scrolling the section head into view. And
+  // the fixed nav bar (~60px tall) can overlap the button's top edge after
+  // scrollIntoView aligns it to the viewport's top. Force the click so the
+  // nav-bar overlap (a visual z-index issue, not a real blocking problem)
+  // doesn't cause a test-tooling timeout.
+  const checkBtn = page.getByRole("button", { name: /check my site/i });
+  await checkBtn.scrollIntoViewIfNeeded();
+  await checkBtn.click();
 
   await expect(page.locator(".score-num")).toHaveText("62");
   // Five findings plus the "get in touch" nudge
@@ -142,6 +160,7 @@ test("findings do not contain prescriptive technical advice", async ({
 
   await page.goto("/");
   await page.locator("#audit").scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 80));
   await page.getByLabel("Your website address").fill("bad.example");
   await page.getByRole("button", { name: /check my site/i }).click();
   await expect(page.locator(".score-num")).toHaveText("22");

@@ -47,8 +47,16 @@ export const runtime = "nodejs";
 // explicit ceiling avoids a slow network hiccup timing the whole run out.
 export const maxDuration = 60;
 
-const BASE_URL =
-  process.env.MONITOR_BASE_URL || "https://deeprun.co.nz";
+/**
+ * The origin to check. MONITOR_BASE_URL pins it explicitly if set; otherwise
+ * the monitor checks the deployment it is itself running on. That default is
+ * both more correct (a preview deployment checks itself, not production) and
+ * makes the endpoint testable locally.
+ */
+function baseUrlFor(request: Request): string {
+  if (process.env.MONITOR_BASE_URL) return process.env.MONITOR_BASE_URL;
+  return new URL(request.url).origin;
+}
 
 const PAGES = [
   "/",
@@ -73,7 +81,7 @@ const SCORE_FLOOR = 85;
 
 type CheckResult = { name: string; ok: boolean; detail: string };
 
-async function checkPagesRespond(): Promise<CheckResult[]> {
+async function checkPagesRespond(BASE_URL: string): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   for (const path of PAGES) {
     try {
@@ -97,7 +105,7 @@ async function checkPagesRespond(): Promise<CheckResult[]> {
   return results;
 }
 
-async function checkHomepageContentAndHeaders(): Promise<CheckResult[]> {
+async function checkHomepageContentAndHeaders(BASE_URL: string): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   try {
     const res = await fetch(BASE_URL, { signal: AbortSignal.timeout(10_000) });
@@ -137,7 +145,7 @@ async function checkHomepageContentAndHeaders(): Promise<CheckResult[]> {
   return results;
 }
 
-async function checkSeoFiles(): Promise<CheckResult[]> {
+async function checkSeoFiles(BASE_URL: string): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   for (const path of ["/robots.txt", "/sitemap.xml"]) {
     try {
@@ -160,7 +168,7 @@ async function checkSeoFiles(): Promise<CheckResult[]> {
   return results;
 }
 
-async function checkContactRouteDryRun(secret: string | null): Promise<CheckResult> {
+async function checkContactRouteDryRun(BASE_URL: string, secret: string | null): Promise<CheckResult> {
   if (!secret) {
     // No CRON_SECRET configured (local/dev, or a manual curl outside
     // Vercel's cron infrastructure). Vercel sets this automatically in
@@ -202,7 +210,31 @@ async function checkContactRouteDryRun(secret: string | null): Promise<CheckResu
   }
 }
 
-async function checkAuditRouteLive(): Promise<CheckResult> {
+async function checkAuditRouteLive(BASE_URL: string): Promise<CheckResult> {
+  // The audit route deliberately refuses private/loopback hosts (SSRF
+  // protection). When the monitor runs against a local origin - a dev box or
+  // the test server - asking it to scan itself is correctly rejected, so
+  // skip rather than report a false alarm. Production origins are public and
+  // exercise the real path.
+  const host = (() => {
+    try {
+      return new URL(BASE_URL).hostname;
+    } catch {
+      return "";
+    }
+  })();
+  const isLocal =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host.endsWith(".local");
+  if (isLocal) {
+    return {
+      name: "audit route (live scan of own homepage)",
+      ok: true,
+      detail: "skipped - local origin is refused by SSRF protection (expected)",
+    };
+  }
   try {
     const res = await fetch(`${BASE_URL}/api/audit`, {
       method: "POST",
@@ -225,7 +257,7 @@ async function checkAuditRouteLive(): Promise<CheckResult> {
   }
 }
 
-async function sendAlertEmail(failures: CheckResult[], allResults: CheckResult[]) {
+async function sendAlertEmail(BASE_URL: string, failures: CheckResult[], allResults: CheckResult[]) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.MONITOR_ALERT_TO;
   if (!apiKey || !to) {
@@ -279,17 +311,19 @@ export async function GET(request: Request) {
     }
   }
 
+  const BASE_URL = baseUrlFor(request);
+
   const results: CheckResult[] = [];
-  results.push(...(await checkPagesRespond()));
-  results.push(...(await checkHomepageContentAndHeaders()));
-  results.push(...(await checkSeoFiles()));
-  results.push(await checkContactRouteDryRun(cronSecret ?? null));
-  results.push(await checkAuditRouteLive());
+  results.push(...(await checkPagesRespond(BASE_URL)));
+  results.push(...(await checkHomepageContentAndHeaders(BASE_URL)));
+  results.push(...(await checkSeoFiles(BASE_URL)));
+  results.push(await checkContactRouteDryRun(BASE_URL, cronSecret ?? null));
+  results.push(await checkAuditRouteLive(BASE_URL));
 
   const failures = results.filter((r) => !r.ok);
 
   if (failures.length > 0) {
-    await sendAlertEmail(failures, results);
+    await sendAlertEmail(BASE_URL, failures, results);
   }
 
   return NextResponse.json({
